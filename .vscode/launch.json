@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Hello",
+            "request": "launch",
+            "mainClass": "Hello",
+            "projectName": "code_5db6f0b9",
+            "vmArgs": "--module-path \"C:\\Users\\LOQ\\OneDrive\\Documents\\javafx-sdk-21.0.10\\lib\" --add-modules javafx.controls,javafx.fxml,javafx.graphics -Dprism.order=sw"
+        },
+        {
+            "type": "java",
+            "name": "Launch App",
+            "request": "launch",
+            "mainClass": "Main",
+            "vmArgs": "--module-path \"C:\\Users\\LOQ\\OneDrive\\Documents\\sajana\\2nd semester\\assesment\\code\\lib\" --add-modules javafx.controls,javafx.fxml,javafx.graphics -Dprism.order=sw"
+        }
+    ]
+}
