@@ -257,6 +257,7 @@ public class RestaurantDashboardController {
     }
 
     // Logout 
+    @FXML
     private void handleLogout(ActionEvent event) {
         SessionManager.getInstance().logout();
         loadScreen(event,
