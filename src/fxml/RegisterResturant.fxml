@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.fooddelivery.RegisterRestaurantController"
+           style="-fx-background-color: #1C3A5E;">
+
+    <VBox alignment="CENTER" spacing="0" maxWidth="480">
+
+        <!-- Header -->
+        <VBox alignment="CENTER" spacing="5"
+              style="-fx-background-color: #15803D;
+                     -fx-padding: 24 40 18 40;
+                     -fx-background-radius: 14 14 0 0;">
+            <Label text="🍽  Restaurant Registration"
+                   style="-fx-font-size: 18px; -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
+            <Label text="Register your restaurant and start receiving orders"
+                   style="-fx-font-size: 11px; -fx-text-fill: #BBF7D0;"/>
+        </VBox>
+
+        <!-- Form -->
+        <VBox spacing="8"
+              style="-fx-background-color: white;
+                     -fx-padding: 22 36 20 36;
+                     -fx-background-radius: 0 0 14 14;">
+
+            <!-- Owner section label -->
+            <Label text="OWNER DETAILS"
+                   style="-fx-font-size: 10px; -fx-font-weight: bold;
+                          -fx-text-fill: #9CA3AF;"/>
+
+            <HBox spacing="12">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Owner Full Name *"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <TextField fx:id="ownerNameField"
+                               promptText="Your name"
+                               style="-fx-border-color: #D1D5DB;
+                                      -fx-border-radius: 7;
+                                      -fx-background-radius: 7;
+                                      -fx-padding: 8 10;"/>
+                </VBox>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Phone"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <TextField fx:id="phoneField"
+                               promptText="Contact number"
+                               style="-fx-border-color: #D1D5DB;
+                                      -fx-border-radius: 7;
+                                      -fx-background-radius: 7;
+                                      -fx-padding: 8 10;"/>
+                </VBox>
+            </HBox>
+
+            <Label text="Email Address *"
+                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                          -fx-text-fill: #374151;"/>
+            <TextField fx:id="emailField"
+                       promptText="you@example.com"
+                       style="-fx-border-color: #D1D5DB; -fx-border-radius: 7;
+                              -fx-background-radius: 7; -fx-padding: 8 10;"/>
+
+            <HBox spacing="12">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Password *"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <PasswordField fx:id="passwordField"
+                                   promptText="Min 4 characters"
+                                   style="-fx-border-color: #D1D5DB;
+                                          -fx-border-radius: 7;
+                                          -fx-background-radius: 7;
+                                          -fx-padding: 8 10;"/>
+                </VBox>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Confirm Password *"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <PasswordField fx:id="confirmField"
+                                   promptText="Repeat password"
+                                   style="-fx-border-color: #D1D5DB;
+                                          -fx-border-radius: 7;
+                                          -fx-background-radius: 7;
+                                          -fx-padding: 8 10;"/>
+                </VBox>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Restaurant section label -->
+            <Label text="RESTAURANT DETAILS"
+                   style="-fx-font-size: 10px; -fx-font-weight: bold;
+                          -fx-text-fill: #9CA3AF;"/>
+
+            <Label text="Restaurant Name *"
+                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                          -fx-text-fill: #374151;"/>
+            <TextField fx:id="restaurantNameField"
+                       promptText="e.g. Himalayan Kitchen"
+                       style="-fx-border-color: #D1D5DB; -fx-border-radius: 7;
+                              -fx-background-radius: 7; -fx-padding: 8 10;"/>
+
+            <Label text="Address *"
+                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                          -fx-text-fill: #374151;"/>
+            <TextField fx:id="addressField"
+                       promptText="Full restaurant address"
+                       style="-fx-border-color: #D1D5DB; -fx-border-radius: 7;
+                              -fx-background-radius: 7; -fx-padding: 8 10;"/>
+
+            <HBox spacing="12">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Cuisine Type"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <TextField fx:id="cuisineField"
+                               promptText="e.g. Nepali, Chinese"
+                               style="-fx-border-color: #D1D5DB;
+                                      -fx-border-radius: 7;
+                                      -fx-background-radius: 7;
+                                      -fx-padding: 8 10;"/>
+                </VBox>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Operating Hours"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #374151;"/>
+                    <TextField fx:id="hoursField"
+                               promptText="e.g. 10am - 10pm"
+                               style="-fx-border-color: #D1D5DB;
+                                      -fx-border-radius: 7;
+                                      -fx-background-radius: 7;
+                                      -fx-padding: 8 10;"/>
+                </VBox>
+            </HBox>
+
+            <Label fx:id="errorLabel" text=""
+                   style="-fx-text-fill: #DC2626; -fx-font-size: 11px;"
+                   wrapText="true"/>
+            <Label fx:id="successLabel" text=""
+                   style="-fx-text-fill: #16A34A; -fx-font-size: 11px;"
+                   wrapText="true"/>
+
+            <Button text="Register Restaurant"
+                    onAction="#handleRegister"
+                    maxWidth="Infinity" prefHeight="40"
+                    style="-fx-background-color: #15803D;
+                           -fx-text-fill: white; -fx-font-weight: bold;
+                           -fx-background-radius: 8; -fx-cursor: hand;"/>
+
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="← Back"
+                        onAction="#handleBack"
+                        style="-fx-background-color: #F1F5F9;
+                               -fx-border-color: #CBD5E0;
+                               -fx-border-radius: 7; -fx-background-radius: 7;
+                               -fx-text-fill: #475569; -fx-cursor: hand;
+                               -fx-padding: 7 20;"/>
+                <Button text="Already have an account? Login"
+                        onAction="#handleBackToLogin"
+                        style="-fx-background-color: transparent;
+                               -fx-border-color: transparent;
+                               -fx-text-fill: #D4600A; -fx-font-weight: bold;
+                               -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>
