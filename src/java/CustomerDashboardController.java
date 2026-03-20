@@ -47,7 +47,7 @@ public class CustomerDashboardController {
         loadHistory();
     }
 
-    // ── Browse ────────────────────────────────────────────────────────────────
+    // Browse
     private void loadRestaurants() {
         try {
             allRestaurants = restaurantDAO.getAll();
@@ -124,8 +124,7 @@ public class CustomerDashboardController {
         }
     }
 
-    // ── Cart ──────────────────────────────────────────────────────────────────
-    @FXML
+    //  Cart 
     private void handleAddToCart(ActionEvent event) {
         int idx = menuListView.getSelectionModel().getSelectedIndex();
         if (idx < 0 || idx >= currentMenu.size()) {
@@ -211,7 +210,7 @@ public class CustomerDashboardController {
         }
     }
 
-    // ── History ───────────────────────────────────────────────────────────────
+    //History 
     @FXML
     private void handleRefreshHistory(ActionEvent event) {
         loadHistory();
@@ -241,8 +240,7 @@ public class CustomerDashboardController {
         }
     }
 
-    // ── Logout ────────────────────────────────────────────────────────────────
-    @FXML
+    // Logout 
     private void handleLogout(ActionEvent event) {
         SessionManager.getInstance().logout();
         loadScreen(event,
