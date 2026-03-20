@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "com.fooddelivery.Main",
+            "projectName": "code_5db6f0b9"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "java.Main",
+            "projectName": "code_5db6f0b9"
+        },
+        {
+            "type": "java",
             "name": "Hello",
             "request": "launch",
             "mainClass": "Hello",
@@ -15,6 +29,13 @@
             "request": "launch",
             "mainClass": "Main",
             "vmArgs": "--module-path \"C:\\Users\\LOQ\\OneDrive\\Documents\\sajana\\2nd semester\\assesment\\code\\lib\" --add-modules javafx.controls,javafx.fxml,javafx.graphics -Dprism.order=sw"
+        },
+        {
+            "type": "java",
+            "name": "Run Food Delivery",
+            "request": "launch",
+            "mainClass": "com.fooddelivery.Main",
+            "vmArgs": "--module-path \"${env:PATH_TO_FX}\" --add-modules javafx.controls,javafx.fxml"
         }
     ]
 }
