@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.fooddelivery.ChooseRoleController"
+           style="-fx-background-color: #1C3A5E;">
+
+    <VBox alignment="CENTER"
+          spacing="0"
+          maxWidth="460">
+
+        <!-- Header -->
+        <VBox alignment="CENTER"
+              spacing="6"
+              style="-fx-background-color: #16304F;
+                     -fx-padding: 28 40 20 40;
+                     -fx-background-radius: 14 14 0 0;">
+
+            <Label text="🍴 Food Delivery System"
+                   style="-fx-font-size: 20px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
+
+            <Label text="Create a new account — pick your role"
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #8EB4D8;"/>
+        </VBox>
+
+        <!-- Role cards -->
+        <VBox spacing="14"
+              style="-fx-background-color: white;
+                     -fx-padding: 30 36 28 36;
+                     -fx-background-radius: 0 0 14 14;">
+
+            <!-- Customer card -->
+            <Button onAction="#goCustomer"
+                    maxWidth="Infinity"
+                    prefHeight="80"
+                    style="-fx-background-color: #EFF6FF;
+                           -fx-border-color: #3B82F6;
+                           -fx-border-width: 1.5;
+                           -fx-border-radius: 10;
+                           -fx-background-radius: 10;
+                           -fx-cursor: hand;
+                           -fx-alignment: CENTER-LEFT;
+                           -fx-padding: 0 20;">
+                <graphic>
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <Label text="🧑‍💼"
+                               style="-fx-font-size: 26px;"/>
+                        <VBox spacing="3">
+                            <Label text="Customer"
+                                   style="-fx-font-size: 14px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1D4ED8;"/>
+                            <Label text="Browse restaurants and order food"
+                                   style="-fx-font-size: 11px;
+                                          -fx-text-fill: #64748B;"/>
+                        </VBox>
+                    </HBox>
+                </graphic>
+            </Button>
+
+            <!-- Restaurant card -->
+            <Button onAction="#goRestaurant"
+                    maxWidth="Infinity"
+                    prefHeight="80"
+                    style="-fx-background-color: #F0FDF4;
+                           -fx-border-color: #22C55E;
+                           -fx-border-width: 1.5;
+                           -fx-border-radius: 10;
+                           -fx-background-radius: 10;
+                           -fx-cursor: hand;
+                           -fx-alignment: CENTER-LEFT;
+                           -fx-padding: 0 20;">
+                <graphic>
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <Label text="🍽"
+                               style="-fx-font-size: 26px;"/>
+                        <VBox spacing="3">
+                            <Label text="Restaurant Owner"
+                                   style="-fx-font-size: 14px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #15803D;"/>
+                            <Label text="List your restaurant and manage orders"
+                                   style="-fx-font-size: 11px;
+                                          -fx-text-fill: #64748B;"/>
+                        </VBox>
+                    </HBox>
+                </graphic>
+            </Button>
+
+            <!-- Driver card -->
+            <Button onAction="#goDriver"
+                    maxWidth="Infinity"
+                    prefHeight="80"
+                    style="-fx-background-color: #FFF7ED;
+                           -fx-border-color: #F97316;
+                           -fx-border-width: 1.5;
+                           -fx-border-radius: 10;
+                           -fx-background-radius: 10;
+                           -fx-cursor: hand;
+                           -fx-alignment: CENTER-LEFT;
+                           -fx-padding: 0 20;">
+                <graphic>
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <Label text="🚗"
+                               style="-fx-font-size: 26px;"/>
+                        <VBox spacing="3">
+                            <Label text="Delivery Driver"
+                                   style="-fx-font-size: 14px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #C2410C;"/>
+                            <Label text="Pick up and deliver orders"
+                                   style="-fx-font-size: 11px;
+                                          -fx-text-fill: #64748B;"/>
+                        </VBox>
+                    </HBox>
+                </graphic>
+            </Button>
+
+            <Separator/>
+
+            <!-- Back to login -->
+            <Button text="← Back to Login"
+                    onAction="#goBack"
+                    maxWidth="Infinity"
+                    prefHeight="36"
+                    style="-fx-background-color: #F1F5F9;
+                           -fx-border-color: #CBD5E0;
+                           -fx-border-radius: 8;
+                           -fx-background-radius: 8;
+                           -fx-text-fill: #475569;
+                           -fx-font-size: 12px;
+                           -fx-cursor: hand;"/>
+        </VBox>
+    </VBox>
+</StackPane>

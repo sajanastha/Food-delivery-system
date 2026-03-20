@@ -1,11 +1,17 @@
 package java;
 
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import java.sql.SQLException;
 
 public class LoginController {
@@ -23,52 +29,95 @@ public class LoginController {
         String email    = emailField.getText().trim();
         String password = passwordField.getText().trim();
 
-        // Don't hit the database if fields are empty
+        // Empty field check
         if (email.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Please enter your email and password.");
+            showError("Please enter your email and password.");
             return;
         }
 
-        // Admin shortcut — no database check needed
+        // Admin shortcut — no database needed
         if (email.equals("admin@gmail.com") && password.equals("admin123")) {
-            Admin admin = new Admin(0, "admin@gmail.com", "admin123", "Administrator", "");
+            Admin admin = new Admin(0, "admin@gmail.com",
+                                   "admin123", "Administrator", "");
             SessionManager.getInstance().setCurrentUser(admin);
-            SceneNavigator.navigateTo(event, SceneNavigator.ADMIN_DASHBOARD);
+            loadScreen(event, "/com/fooddelivery/views/AdminDashboard.fxml",
+                       "Admin Dashboard");
             return;
         }
 
-        // Normal login — check against the database
+        // Check database
         try {
             User user = userDAO.validateLogin(email, password);
 
             if (user == null) {
-                errorLabel.setText("Incorrect email or password.");
+                // Show a pop-up alert
+                showPopup(AlertType.ERROR,
+                          "User Not Found",
+                          "No account matches that email and password.\n" +
+                          "Please check your details or register first.");
                 passwordField.clear();
                 return;
             }
 
-            // Save the logged in user so all screens can access it
+            // Save logged-in user to session
             SessionManager.getInstance().setCurrentUser(user);
 
-            // Route to the correct dashboard based on role
-            String destination = switch (user.getRole()) {
-                case CUSTOMER   -> SceneNavigator.CUSTOMER_DASHBOARD;
-                case RESTAURANT -> SceneNavigator.RESTAURANT_DASHBOARD;
-                case DRIVER     -> SceneNavigator.DRIVER_DASHBOARD;
-                case ADMIN      -> SceneNavigator.ADMIN_DASHBOARD;
+            // Route to correct dashboard
+            String fxml = switch (user.getRole()) {
+                case CUSTOMER    -> "/com/fooddelivery/views/CustomerDashboard.fxml";
+                case RESTAURANT  -> "/com/fooddelivery/views/RestaurantDashboard.fxml";
+                case DRIVER      -> "/com/fooddelivery/views/DriverDashboard.fxml";
+                case ADMIN       -> "/com/fooddelivery/views/AdminDashboard.fxml";
             };
 
-            SceneNavigator.navigateTo(event, destination);
+            showPopup(AlertType.INFORMATION,
+                      "Welcome back!",
+                      "Logged in as: " + user.getFullName());
+
+            loadScreen(event, fxml, user.getRole().toString());
 
         } catch (SQLException e) {
-            errorLabel.setText("Could not connect to database. Try again.");
+            showError("Could not connect to database. Please try again.");
             e.printStackTrace();
         }
     }
 
-    // Register button — goes to role selection screen
+    // Go to role selection screen
     @FXML
     private void handleRegister(ActionEvent event) {
-        SceneNavigator.navigateTo(event, SceneNavigator.CHOOSE_ROLE);
+        loadScreen(event,
+                   "/com/fooddelivery/views/ChooseRole.fxml",
+                   "Register — Choose Role");
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+    }
+
+    private void showPopup(AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void loadScreen(ActionEvent event, String fxmlPath, String title) {
+        try {
+            Parent root = FXMLLoader.load(
+                getClass().getResource(fxmlPath)
+            );
+            Stage stage = (Stage)((Node) event.getSource())
+                              .getScene().getWindow();
+            stage.setTitle("Food Delivery — " + title);
+            stage.setScene(new Scene(root));
+            stage.setResizable(true);
+            stage.show();
+        } catch (Exception e) {
+            showError("Screen failed to load: " + fxmlPath);
+            e.printStackTrace();
+        }
     }
 }

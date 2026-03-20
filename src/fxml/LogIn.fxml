@@ -1,75 +1,118 @@
-import com.fooddelivery.dao.UserDAO;
-import com.fooddelivery.model.User;
-import com.fooddelivery.model.Admin;
-import com.fooddelivery.model.enums.UserRole;
-import com.fooddelivery.service.SceneNavigator;
-import com.fooddelivery.service.SessionManager;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import java.sql.SQLException;
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-public class LoginController {
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.fooddelivery.LoginController"
+           style="-fx-background-color: #1C3A5E;">
 
-    @FXML private TextField     emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label         errorLabel;
+    <VBox alignment="CENTER"
+          spacing="0"
+          maxWidth="420"
+          maxHeight="480">
 
-    private final UserDAO userDAO = new UserDAO();
+        <!-- Top blue header -->
+        <VBox alignment="CENTER"
+              spacing="8"
+              style="-fx-background-color: #16304F;
+                     -fx-padding: 32 40 24 40;
+                     -fx-background-radius: 14 14 0 0;">
 
-    @FXML
-    private void handleLogin(ActionEvent event) {
-        errorLabel.setText("");
+            <Label text="🍴"
+                   style="-fx-font-size: 38px;"/>
 
-        String email    = emailField.getText().trim();
-        String password = passwordField.getText().trim();
+            <Label text="Food Delivery System"
+                   style="-fx-font-size: 20px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
 
-        // Basic check — don't even hit the database if fields are empty
-        if (email.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Please enter your email and password.");
-            return;
-        }
+            <Label text="Sign in to continue"
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #8EB4D8;"/>
+        </VBox>
 
-        // Admin shortcut — no database needed
-        if (email.equals("admin@gmail.com") && password.equals("admin123")) {
-            Admin admin = new Admin(0, "admin@gmail.com", "admin123", "Administrator", "");
-            SessionManager.getInstance().setCurrentUser(admin);
-            SceneNavigator.navigateTo(event, SceneNavigator.ADMIN_DASHBOARD);
-            return;
-        }
+        <!-- White form card -->
+        <VBox spacing="12"
+              style="-fx-background-color: white;
+                     -fx-padding: 28 36 24 36;
+                     -fx-background-radius: 0 0 14 14;">
 
-        // Normal login — check the database
-        try {
-            User user = userDAO.validateLogin(email, password);
+            <!-- Email -->
+            <Label text="Email Address"
+                   style="-fx-font-size: 11px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #334155;"/>
+            <TextField fx:id="emailField"
+                       promptText="Enter your email"
+                       style="-fx-border-color: #CBD5E0;
+                              -fx-border-radius: 8;
+                              -fx-background-radius: 8;
+                              -fx-padding: 9 12;
+                              -fx-font-size: 12px;"/>
 
-            if (user == null) {
-                errorLabel.setText("Incorrect email or password.");
-                passwordField.clear();
-                return;
-            }
+            <!-- Password -->
+            <Label text="Password"
+                   style="-fx-font-size: 11px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #334155;"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Enter your password"
+                           style="-fx-border-color: #CBD5E0;
+                                  -fx-border-radius: 8;
+                                  -fx-background-radius: 8;
+                                  -fx-padding: 9 12;
+                                  -fx-font-size: 12px;"/>
 
-            // Save who is logged in
-            SessionManager.getInstance().setCurrentUser(user);
+            <!-- Error message label — hidden until needed -->
+            <Label fx:id="errorLabel"
+                   text=""
+                   style="-fx-text-fill: #DC2626;
+                          -fx-font-size: 11px;"
+                   wrapText="true"/>
 
-            // Send them to the right dashboard based on their role
-            String destination = switch (user.getRole()) {
-                case CUSTOMER   -> SceneNavigator.CUSTOMER_DASHBOARD;
-                case RESTAURANT -> SceneNavigator.RESTAURANT_DASHBOARD;
-                case DRIVER     -> SceneNavigator.DRIVER_DASHBOARD;
-                case ADMIN      -> SceneNavigator.ADMIN_DASHBOARD;
-            };
+            <!-- Login button -->
+            <Button text="Sign In"
+                    onAction="#handleLogin"
+                    maxWidth="Infinity"
+                    prefHeight="40"
+                    style="-fx-background-color: #1C3A5E;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-font-size: 13px;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"/>
 
-            SceneNavigator.navigateTo(event, destination);
+            <Separator/>
 
-        } catch (SQLException e) {
-            errorLabel.setText("Could not connect to database. Try again.");
-            e.printStackTrace();
-        }
-    }
+            <!-- Register section -->
+            <VBox alignment="CENTER" spacing="6">
 
-    // "Register here" button — goes to the role selection screen
-    @FXML
-    private void handleRegister(ActionEvent event) {
-        SceneNavigator.navigateTo(event, SceneNavigator.CHOOSE_ROLE);
-    }
-}
+                <Label text="Don't have an account yet?"
+                       style="-fx-text-fill: #64748B;
+                              -fx-font-size: 11px;"/>
+
+                <Button text="Register"
+                        onAction="#handleRegister"
+                        maxWidth="Infinity"
+                        prefHeight="36"
+                        style="-fx-background-color: white;
+                               -fx-border-color: #1C3A5E;
+                               -fx-border-radius: 8;
+                               -fx-background-radius: 8;
+                               -fx-text-fill: #1C3A5E;
+                               -fx-font-weight: bold;
+                               -fx-font-size: 12px;
+                               -fx-cursor: hand;"/>
+            </VBox>
+
+            <!-- Admin hint -->
+            <Label text="Admin: admin@gmail.com / admin123"
+                   style="-fx-text-fill: #94A3B8;
+                          -fx-font-size: 9px;"
+                   maxWidth="Infinity"
+                   alignment="CENTER"/>
+
+        </VBox>
+    </VBox>
+</StackPane>
