@@ -3,6 +3,8 @@ package java;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.scene.control.MenuItem;
+
 public class Restaurant extends User {
 
     private int restaurantID;

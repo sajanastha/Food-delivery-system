@@ -41,6 +41,7 @@ public class AdminDashboardController {
     }
 
     // ── Users 
+    private void loadUsers() {
         try {
             allUsers = userDAO.getAllUsers();
             List<String> display = new ArrayList<>();
