@@ -23,26 +23,21 @@ public class ReportService {
                 today.minusDays(30), today, "MONTHLY");
     }
 
-    private SalesReport build(int restaurantId,
-            LocalDate from, LocalDate to, String type)
-            throws SQLException {
+    private SalesReport build(int id, LocalDate from,
+            LocalDate to, String type) throws SQLException {
         List<Order> orders = orderDAO.getCompletedInRange(
-                restaurantId, from.toString(), to.toString());
-
+                id, from.toString(), to.toString());
         double revenue = orders.stream()
                 .mapToDouble(Order::getTotalAmount).sum();
-
         Map<String, Integer> freq = new HashMap<>();
         for (Order o : orders)
             for (OrderItem i : o.getItems())
                 freq.merge(i.getItemName(),
                         i.getQuantity(), Integer::sum);
-
         String top = freq.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse("No completed orders yet");
-
+                .orElse("None yet");
         return new SalesReport(type, from, to,
                 orders.size(), revenue, top);
     }

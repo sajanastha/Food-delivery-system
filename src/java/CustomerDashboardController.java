@@ -1,4 +1,4 @@
-package java;
+package java; 
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class CustomerDashboardController {
 
