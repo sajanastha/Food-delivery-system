@@ -8,7 +8,7 @@ public class DatabaseManager {
 
     private static final String DB_URL  = "jdbc:mysql://localhost:3306/food_delivery";
     private static final String DB_USER = "root";
-    private static final String DB_PASS = "yourpassword"; // change this
+    private static final String DB_PASS = "sajana123456789"; 
 
     private DatabaseManager() {
         connect();
