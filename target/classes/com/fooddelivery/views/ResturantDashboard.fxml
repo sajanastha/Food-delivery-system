@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fooddelivery.RestaurantDashboardController"
+            prefWidth="940" prefHeight="660"
+            style="-fx-background-color: #F0FDF4;">
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16"
+              style="-fx-background-color: #15803D;
+                     -fx-padding: 12 20;">
+            <Label text="🍽  Restaurant Portal"
+                   style="-fx-font-size: 17px; -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Label fx:id="welcomeLabel"
+                   style="-fx-text-fill: #BBF7D0;
+                          -fx-font-size: 12px;"/>
+            <Button text="Logout" onAction="#handleLogout"
+                    style="-fx-background-color: #DC2626;
+                           -fx-text-fill: white; -fx-background-radius: 7;
+                           -fx-cursor: hand; -fx-padding: 6 14;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+
+            <!-- TAB 1: Menu Management -->
+            <Tab text="📋  Menu Management">
+                <HBox spacing="16" style="-fx-padding: 16;">
+
+                    <!-- Left: menu list -->
+                    <VBox spacing="8" prefWidth="360">
+                        <Label text="Current Menu Items"
+                               style="-fx-font-weight: bold;
+                                      -fx-text-fill: #15803D;
+                                      -fx-font-size: 12px;"/>
+                        <ListView fx:id="menuListView"
+                                  prefHeight="320"
+                                  onMouseClicked="#handleMenuSelected"
+                                  style="-fx-border-color: #A7F3D0;
+                                         -fx-border-radius: 8;"/>
+                        <HBox spacing="8">
+                            <Button text="🔄 Toggle Available"
+                                    onAction="#handleToggle"
+                                    style="-fx-background-color: #1D4ED8;
+                                           -fx-text-fill: white;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;
+                                           -fx-padding: 7 12;"/>
+                            <Button text="🗑 Delete"
+                                    onAction="#handleDeleteItem"
+                                    style="-fx-background-color: #DC2626;
+                                           -fx-text-fill: white;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;
+                                           -fx-padding: 7 12;"/>
+                        </HBox>
+                        <Label fx:id="menuStatus" text=""
+                               style="-fx-font-size: 11px;"
+                               wrapText="true"/>
+                    </VBox>
+
+                    <!-- Right: add/edit form -->
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="Add / Edit Item"
+                               style="-fx-font-weight: bold;
+                                      -fx-text-fill: #15803D;
+                                      -fx-font-size: 12px;"/>
+
+                        <Label text="Item Name *"
+                               style="-fx-font-size: 11px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #374151;"/>
+                        <TextField fx:id="itemNameField"
+                                   promptText="e.g. Chicken Momo"
+                                   style="-fx-border-color: #D1D5DB;
+                                          -fx-border-radius: 7;
+                                          -fx-background-radius: 7;
+                                          -fx-padding: 8 10;"/>
+
+                        <HBox spacing="12">
+                            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                                <Label text="Price (NPR) *"
+                                       style="-fx-font-size: 11px;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #374151;"/>
+                                <TextField fx:id="itemPriceField"
+                                           promptText="e.g. 250"
+                                           style="-fx-border-color: #D1D5DB;
+                                                  -fx-border-radius: 7;
+                                                  -fx-background-radius: 7;
+                                                  -fx-padding: 8 10;"/>
+                            </VBox>
+                            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                                <Label text="Category"
+                                       style="-fx-font-size: 11px;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #374151;"/>
+                                <TextField fx:id="itemCategoryField"
+                                           promptText="Starter / Main / Drink"
+                                           style="-fx-border-color: #D1D5DB;
+                                                  -fx-border-radius: 7;
+                                                  -fx-background-radius: 7;
+                                                  -fx-padding: 8 10;"/>
+                            </VBox>
+                        </HBox>
+
+                        <Label text="Description"
+                               style="-fx-font-size: 11px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #374151;"/>
+                        <TextArea fx:id="itemDescField"
+                                  prefHeight="80"
+                                  promptText="Short description..."
+                                  style="-fx-border-color: #D1D5DB;
+                                         -fx-border-radius: 7;
+                                         -fx-background-radius: 7;"/>
+
+                        <HBox spacing="10">
+                            <Button text="➕ Add Item"
+                                    onAction="#handleAddItem"
+                                    prefHeight="38"
+                                    HBox.hgrow="ALWAYS"
+                                    maxWidth="Infinity"
+                                    style="-fx-background-color: #15803D;
+                                           -fx-text-fill: white;
+                                           -fx-font-weight: bold;
+                                           -fx-background-radius: 8;
+                                           -fx-cursor: hand;"/>
+                            <Button text="✏ Update Selected"
+                                    onAction="#handleUpdateItem"
+                                    prefHeight="38"
+                                    HBox.hgrow="ALWAYS"
+                                    maxWidth="Infinity"
+                                    style="-fx-background-color: #D4600A;
+                                           -fx-text-fill: white;
+                                           -fx-font-weight: bold;
+                                           -fx-background-radius: 8;
+                                           -fx-cursor: hand;"/>
+                        </HBox>
+                    </VBox>
+                </HBox>
+            </Tab>
+
+            <!-- TAB 2: Incoming Orders -->
+            <Tab text="📦  Incoming Orders">
+                <HBox spacing="14" style="-fx-padding: 16;">
+                    <VBox spacing="8" prefWidth="360">
+                        <Label text="Orders"
+                               style="-fx-font-weight: bold;
+                                      -fx-text-fill: #15803D;
+                                      -fx-font-size: 12px;"/>
+                        <ListView fx:id="orderListView"
+                                  prefHeight="300"
+                                  onMouseClicked="#handleOrderSelected"
+                                  style="-fx-border-color: #A7F3D0;
+                                         -fx-border-radius: 8;"/>
+                        <HBox spacing="8">
+                            <Button text="✅ Confirm"
+                                    onAction="#handleConfirm"
+                                    style="-fx-background-color: #15803D;
+                                           -fx-text-fill: white;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;
+                                           -fx-padding: 7 16;"/>
+                            <Button text="✗ Cancel"
+                                    onAction="#handleCancel"
+                                    style="-fx-background-color: #DC2626;
+                                           -fx-text-fill: white;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;
+                                           -fx-padding: 7 16;"/>
+                            <Button text="Refresh"
+                                    onAction="#handleRefreshOrders"
+                                    style="-fx-background-color: #64748B;
+                                           -fx-text-fill: white;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;
+                                           -fx-padding: 7 14;"/>
+                        </HBox>
+                        <Label fx:id="orderStatus" text=""
+                               style="-fx-font-size: 11px;"
+                               wrapText="true"/>
+                    </VBox>
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Order Details"
+                               style="-fx-font-weight: bold;
+                                      -fx-text-fill: #15803D;
+                                      -fx-font-size: 12px;"/>
+                        <TextArea fx:id="orderDetailArea"
+                                  prefHeight="360"
+                                  editable="false"
+                                  style="-fx-font-family: monospace;
+                                         -fx-font-size: 11px;
+                                         -fx-border-color: #A7F3D0;
+                                         -fx-border-radius: 8;"/>
+                    </VBox>
+                </HBox>
+            </Tab>
+
+            <!-- TAB 3: Sales Reports -->
+            <Tab text="📊  Sales Reports">
+                <VBox spacing="14" style="-fx-padding: 16;">
+                    <Label text="Generate Sales Report"
+                           style="-fx-font-size: 14px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #15803D;"/>
+                    <HBox spacing="12">
+                        <Button text="📅  Weekly Report (last 7 days)"
+                                onAction="#handleWeekly"
+                                prefHeight="40"
+                                style="-fx-background-color: #15803D;
+                                       -fx-text-fill: white;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 8;
+                                       -fx-cursor: hand;
+                                       -fx-padding: 0 20;"/>
+                        <Button text="📅  Monthly Report (last 30 days)"
+                                onAction="#handleMonthly"
+                                prefHeight="40"
+                                style="-fx-background-color: #1C3A5E;
+                                       -fx-text-fill: white;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 8;
+                                       -fx-cursor: hand;
+                                       -fx-padding: 0 20;"/>
+                    </HBox>
+                    <TextArea fx:id="reportArea"
+                              prefHeight="400"
+                              editable="false"
+                              style="-fx-font-family: monospace;
+                                     -fx-font-size: 12px;
+                                     -fx-border-color: #A7F3D0;
+                                     -fx-border-radius: 8;"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>

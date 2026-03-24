@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.fooddelivery.LoginController"
+           style="-fx-background-color: #1C3A5E;">
+
+    <VBox alignment="CENTER"
+          spacing="0"
+          maxWidth="420"
+          maxHeight="480">
+
+        <!-- Top blue header -->
+        <VBox alignment="CENTER"
+              spacing="8"
+              style="-fx-background-color: #16304F;
+                     -fx-padding: 32 40 24 40;
+                     -fx-background-radius: 14 14 0 0;">
+
+            <Label text="🍴"
+                   style="-fx-font-size: 38px;"/>
+
+            <Label text="Food Delivery System"
+                   style="-fx-font-size: 20px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
+
+            <Label text="Sign in to continue"
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #8EB4D8;"/>
+        </VBox>
+
+        <!-- White form card -->
+        <VBox spacing="12"
+              style="-fx-background-color: white;
+                     -fx-padding: 28 36 24 36;
+                     -fx-background-radius: 0 0 14 14;">
+
+            <!-- Email -->
+            <Label text="Email Address"
+                   style="-fx-font-size: 11px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #334155;"/>
+            <TextField fx:id="emailField"
+                       promptText="Enter your email"
+                       style="-fx-border-color: #CBD5E0;
+                              -fx-border-radius: 8;
+                              -fx-background-radius: 8;
+                              -fx-padding: 9 12;
+                              -fx-font-size: 12px;"/>
+
+            <!-- Password -->
+            <Label text="Password"
+                   style="-fx-font-size: 11px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #334155;"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Enter your password"
+                           style="-fx-border-color: #CBD5E0;
+                                  -fx-border-radius: 8;
+                                  -fx-background-radius: 8;
+                                  -fx-padding: 9 12;
+                                  -fx-font-size: 12px;"/>
+
+            <!-- Error message label — hidden until needed -->
+            <Label fx:id="errorLabel"
+                   text=""
+                   style="-fx-text-fill: #DC2626;
+                          -fx-font-size: 11px;"
+                   wrapText="true"/>
+
+            <!-- Login button -->
+            <Button text="Sign In"
+                    onAction="#handleLogin"
+                    maxWidth="Infinity"
+                    prefHeight="40"
+                    style="-fx-background-color: #1C3A5E;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-font-size: 13px;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"/>
+
+            <Separator/>
+
+            <!-- Register section -->
+            <VBox alignment="CENTER" spacing="6">
+
+                <Label text="Don't have an account yet?"
+                       style="-fx-text-fill: #64748B;
+                              -fx-font-size: 11px;"/>
+
+                <Button text="Register"
+                        onAction="#handleRegister"
+                        maxWidth="Infinity"
+                        prefHeight="36"
+                        style="-fx-background-color: white;
+                               -fx-border-color: #1C3A5E;
+                               -fx-border-radius: 8;
+                               -fx-background-radius: 8;
+                               -fx-text-fill: #1C3A5E;
+                               -fx-font-weight: bold;
+                               -fx-font-size: 12px;
+                               -fx-cursor: hand;"/>
+            </VBox>
+
+            <!-- Admin hint -->
+            <Label text="Admin: admin@gmail.com / admin123"
+                   style="-fx-text-fill: #94A3B8;
+                          -fx-font-size: 9px;"
+                   maxWidth="Infinity"
+                   alignment="CENTER"/>
+
+        </VBox>
+    </VBox>
+</StackPane>
