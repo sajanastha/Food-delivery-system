@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fooddelivery.RestaurantDashboardController"
+            prefWidth="940" prefHeight="660"
+            style="-fx-background-color: #F0FDF4;">
+
+    <!-- TOP -->
+    <top>
+        <Label fx:id="welcomeLabel"
+               text="Restaurant Dashboard"
+               style="-fx-font-size: 18px; -fx-padding: 10;"/>
+    </top>
+
+    <!-- ✅ CENTER (THIS WAS MISSING) -->
+    <center>
+        <TabPane fx:id="tabPane">
+
+            <!-- HOME (Menu) -->
+            <Tab text="Home">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <Label text="Menu Management"/>
+                    <ListView fx:id="menuListView"/>
+                </VBox>
+            </Tab>
+
+            <!-- ORDERS -->
+            <Tab text="Orders">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <Label text="Orders"/>
+                    <ListView fx:id="orderListView"/>
+                    <TextArea fx:id="orderDetailArea"/>
+                </VBox>
+            </Tab>
+
+            <!-- REPORTS -->
+            <Tab text="Reports">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <Label text="Reports"/>
+                    <TextArea fx:id="reportArea"/>
+                </VBox>
+            </Tab>
+
+        </TabPane>
+    </center>
+
+    <!-- BOTTOM (your navbar stays SAME) -->
+    <bottom>
+        <HBox alignment="CENTER"
+              spacing="20"
+              style="-fx-background-color: #4d9078;
+                     -fx-padding: 12 20;">
+
+            <Button text="🏠 Home"
+                    onAction="#goHome"
+                    onMouseEntered="#hoverIn"
+                    onMouseExited="#hoverOut"
+                    style="-fx-background-color: #FF7518; -fx-text-fill: white;"/>
+
+            <Button text="📦 Orders"
+                    onAction="#goOrders"
+                    onMouseEntered="#hoverIn"
+                    onMouseExited="#hoverOut"
+                    style="-fx-background-color: #FF7518; -fx-text-fill: white;"/>
+
+            <Button text="📊 Reports"
+                    onAction="#goReports"
+                    onMouseEntered="#hoverIn"
+                    onMouseExited="#hoverOut"
+                    style="-fx-background-color: #FF7518; -fx-text-fill: white;"/>
+
+            <Button text="📖 Bookings"
+                    onAction="#goBookings"
+                    onMouseEntered="#hoverIn"
+                    onMouseExited="#hoverOut"
+                    style="-fx-background-color: #FF7518; -fx-text-fill: white;"/>
+
+            <Button text="👤 Profile"
+                    onAction="#goProfile"
+                    onMouseEntered="#hoverIn"
+                    onMouseExited="#hoverOut"
+                    style="-fx-background-color: #FF7518; -fx-text-fill: white;"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>

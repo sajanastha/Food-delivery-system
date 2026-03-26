@@ -64,7 +64,7 @@ public class RegisterRestaurantController {
             return;
         }
 
-        // ── Save to database ──────────────────────────────────────────
+        // ── Save to database 
         try {
             if (userDAO.emailExists(email)) {
                 errorLabel.setText(
