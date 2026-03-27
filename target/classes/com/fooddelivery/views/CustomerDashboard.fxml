@@ -22,6 +22,7 @@
 
     <center>
         <StackPane>
+
             <ScrollPane fx:id="homePage" fitToWidth="true"
                         style="-fx-background: #F8FAFC; -fx-background-color: #F8FAFC;">
                 <VBox spacing="0">
@@ -32,6 +33,7 @@
                         <Label text="Order from the best restaurants near you"
                                style="-fx-font-size: 12px; -fx-text-fill: #93C5FD;"/>
                     </VBox>
+
                     <VBox spacing="24" style="-fx-padding: 22 20;">
                         <VBox spacing="12">
                             <Label text="Most Popular Restaurants Today"
@@ -40,7 +42,9 @@
                             <Label fx:id="noPopularRestLabel" text="" visible="false"
                                    style="-fx-text-fill: #9CA3AF; -fx-font-size: 12px;"/>
                         </VBox>
+
                         <Separator/>
+
                         <VBox spacing="12">
                             <Label text="Most Ordered Food Right Now"
                                    style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1C3A5E;"/>
@@ -80,6 +84,7 @@
                                      style="-fx-font-size: 12px;"/>
                     </HBox>
                 </VBox>
+
                 <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                             style="-fx-background: #F8FAFC; -fx-background-color: #F8FAFC;">
                     <VBox spacing="14" style="-fx-padding: 18;">
@@ -149,6 +154,7 @@
                                 style="-fx-background-color: #1C3A5E; -fx-text-fill: white;
                                        -fx-background-radius: 7; -fx-cursor: hand; -fx-padding: 7 14;"/>
                     </HBox>
+
                     <VBox fx:id="emptyHistoryBox" alignment="CENTER" spacing="16"
                           visible="false" VBox.vgrow="ALWAYS" style="-fx-padding: 60 0;">
                         <Label text="Start your very first order!"
@@ -161,6 +167,7 @@
                                        -fx-font-weight: bold; -fx-font-size: 13px;
                                        -fx-background-radius: 12; -fx-cursor: hand;"/>
                     </VBox>
+
                     <ListView fx:id="historyListView" VBox.vgrow="ALWAYS"
                               style="-fx-border-color: #E5E7EB; -fx-border-radius: 8;"/>
                 </VBox>
@@ -171,6 +178,7 @@
                 <VBox spacing="18" style="-fx-padding: 24;">
                     <Label text="My Profile"
                            style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1C3A5E;"/>
+
                     <VBox spacing="12"
                           style="-fx-background-color: white; -fx-border-color: #E5E7EB;
                                  -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 18 20;">
@@ -201,6 +209,7 @@
                         <Label fx:id="nameStatus" text=""
                                style="-fx-font-size: 11px; -fx-text-fill: #15803D;"/>
                     </VBox>
+
                     <VBox spacing="12"
                           style="-fx-background-color: white; -fx-border-color: #E5E7EB;
                                  -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 18 20;">
@@ -239,6 +248,7 @@
                         <Label fx:id="emailStatus" text=""
                                style="-fx-font-size: 11px;" wrapText="true"/>
                     </VBox>
+
                     <VBox spacing="12"
                           style="-fx-background-color: white; -fx-border-color: #E5E7EB;
                                  -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 18 20;">
@@ -268,6 +278,7 @@
                         <Label fx:id="passStatus" text=""
                                style="-fx-font-size: 11px;" wrapText="true"/>
                     </VBox>
+
                     <VBox spacing="10"
                           style="-fx-background-color: white; -fx-border-color: #E5E7EB;
                                  -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 18 20;">
@@ -291,6 +302,7 @@
                            style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1C3A5E;"/>
                     <Label text="Your ordered food items are shown here under each restaurant. You can add feedback for any item that does not have one yet."
                            style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+
                     <VBox fx:id="emptyFeedbackBox" alignment="CENTER" spacing="14" visible="false"
                           style="-fx-background-color: white; -fx-border-color: #E5E7EB;
                                  -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 40 24;">
@@ -304,11 +316,14 @@
                                        -fx-font-weight: bold; -fx-font-size: 14px;
                                        -fx-background-radius: 12; -fx-cursor: hand;"/>
                     </VBox>
+
                     <VBox fx:id="feedbackItemsBox" spacing="14"/>
+
                     <Label fx:id="feedbackPageStatus" text=""
                            style="-fx-font-size: 12px; -fx-text-fill: #6B7280;" wrapText="true"/>
                 </VBox>
             </ScrollPane>
+
         </StackPane>
     </center>
 
@@ -317,6 +332,7 @@
               style="-fx-background-color: white;
                      -fx-border-color: #E5E7EB transparent transparent transparent;
                      -fx-border-width: 1;">
+
             <Button fx:id="navHome" text="Home"
                     onAction="#navToHome"
                     HBox.hgrow="ALWAYS" maxWidth="Infinity"
@@ -326,6 +342,7 @@
                            -fx-font-size: 11px; -fx-font-weight: bold;
                            -fx-background-radius: 0; -fx-cursor: hand;
                            -fx-border-color: transparent;"/>
+
             <Button fx:id="navSearch" text="Search"
                     onAction="#navToSearch"
                     HBox.hgrow="ALWAYS" maxWidth="Infinity"
@@ -335,6 +352,7 @@
                            -fx-font-size: 11px; -fx-font-weight: bold;
                            -fx-background-radius: 0; -fx-cursor: hand;
                            -fx-border-color: transparent;"/>
+
             <Button fx:id="navHistory" text="Orders"
                     onAction="#navToHistory"
                     HBox.hgrow="ALWAYS" maxWidth="Infinity"
@@ -344,6 +362,7 @@
                            -fx-font-size: 11px; -fx-font-weight: bold;
                            -fx-background-radius: 0; -fx-cursor: hand;
                            -fx-border-color: transparent;"/>
+
             <Button fx:id="navProfile" text="Profile"
                     onAction="#navToProfile"
                     HBox.hgrow="ALWAYS" maxWidth="Infinity"
@@ -353,6 +372,7 @@
                            -fx-font-size: 11px; -fx-font-weight: bold;
                            -fx-background-radius: 0; -fx-cursor: hand;
                            -fx-border-color: transparent;"/>
+
             <Button fx:id="navFeedback" text="Feedback"
                     onAction="#navToFeedback"
                     HBox.hgrow="ALWAYS" maxWidth="Infinity"
@@ -362,6 +382,8 @@
                            -fx-font-size: 11px; -fx-font-weight: bold;
                            -fx-background-radius: 0; -fx-cursor: hand;
                            -fx-border-color: transparent;"/>
+
         </HBox>
     </bottom>
+
 </BorderPane>

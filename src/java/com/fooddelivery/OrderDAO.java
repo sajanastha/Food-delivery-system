@@ -66,6 +66,36 @@ public class OrderDAO {
             "ORDER BY orderTime DESC", restaurantID);
     }
 
+    public List<Order> getAllOrders() throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders ORDER BY orderTime DESC";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Order o = map(rs);
+                o.setItems(itemsFor(o.getOrderID()));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
+    public List<Order> getByStatus(OrderStatus status)
+            throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE status=? ORDER BY orderTime DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order o = map(rs);
+                o.setItems(itemsFor(o.getOrderID()));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
     public List<Order> getAvailableForDrivers()
             throws SQLException {
         List<Order> list = new ArrayList<>();

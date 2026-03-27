@@ -7,19 +7,15 @@
             prefWidth="940" prefHeight="640"
             style="-fx-background-color: #F8FAFC;">
 
-    <!-- TOP BAR -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="16"
-              style="-fx-background-color: #1C3A5E;
-                     -fx-padding: 12 20;">
-            <Label text="🛡  Admin Panel"
-                   style="-fx-font-size: 17px; -fx-font-weight: bold;
-                          -fx-text-fill: white;"/>
+              style="-fx-background-color: #1C3A5E; -fx-padding: 12 20;">
+            <Label text="Admin Panel"
+                   style="-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: white;"/>
             <Pane HBox.hgrow="ALWAYS"/>
             <Label fx:id="welcomeLabel"
-                   style="-fx-text-fill: #93C5FD;
-                          -fx-font-size: 12px;"/>
-            <Button text="🔄 Refresh" onAction="#handleRefresh"
+                   style="-fx-text-fill: #93C5FD; -fx-font-size: 12px;"/>
+            <Button text="Refresh" onAction="#handleRefresh"
                     style="-fx-background-color: rgba(255,255,255,0.15);
                            -fx-text-fill: white;
                            -fx-background-radius: 7;
@@ -37,22 +33,21 @@
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE">
 
-            <!-- TAB 1: User Management -->
-            <Tab text="👤  User Management">
+            <Tab text="User Management">
                 <HBox spacing="16" style="-fx-padding: 16;">
-
-                    <VBox spacing="8" prefWidth="420">
-                        <Label text="All Registered Users"
-                               style="-fx-font-weight: bold;
-                                      -fx-text-fill: #1C3A5E;
-                                      -fx-font-size: 12px;"/>
+                    <VBox spacing="10" prefWidth="420">
+                        <Label text="Registered Customers and Drivers"
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
+                        <ComboBox fx:id="userCategoryCombo"
+                                  onAction="#handleUserCategoryChanged"
+                                  prefWidth="180"
+                                  style="-fx-background-radius: 8;"/>
                         <ListView fx:id="userListView"
                                   prefHeight="340"
                                   onMouseClicked="#handleUserSelected"
-                                  style="-fx-border-color: #CBD5E0;
-                                         -fx-border-radius: 8;"/>
+                                  style="-fx-border-color: #CBD5E0; -fx-border-radius: 8;"/>
                         <HBox spacing="8">
-                            <Button text="🚫 Deactivate"
+                            <Button text="Deactivate"
                                     onAction="#handleDeactivate"
                                     HBox.hgrow="ALWAYS"
                                     maxWidth="Infinity"
@@ -62,7 +57,7 @@
                                            -fx-font-weight: bold;
                                            -fx-background-radius: 7;
                                            -fx-cursor: hand;"/>
-                            <Button text="✅ Reactivate"
+                            <Button text="Reactivate"
                                     onAction="#handleReactivate"
                                     HBox.hgrow="ALWAYS"
                                     maxWidth="Infinity"
@@ -72,7 +67,7 @@
                                            -fx-font-weight: bold;
                                            -fx-background-radius: 7;
                                            -fx-cursor: hand;"/>
-                            <Button text="🗑 Delete"
+                            <Button text="Delete"
                                     onAction="#handleDeleteUser"
                                     HBox.hgrow="ALWAYS"
                                     maxWidth="Infinity"
@@ -90,13 +85,11 @@
 
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                         <Label text="Selected User Details"
-                               style="-fx-font-weight: bold;
-                                      -fx-text-fill: #1C3A5E;
-                                      -fx-font-size: 12px;"/>
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
                         <TextArea fx:id="userDetailArea"
                                   prefHeight="400"
                                   editable="false"
-                                  promptText="Click a user to view details..."
+                                  promptText="Click a customer or driver to view details..."
                                   style="-fx-font-family: monospace;
                                          -fx-font-size: 11px;
                                          -fx-border-color: #CBD5E0;
@@ -105,25 +98,19 @@
                 </HBox>
             </Tab>
 
-            <!-- TAB 2: Restaurants -->
-            <Tab text="🍴  Restaurants">
+            <Tab text="Restaurants">
                 <HBox spacing="16" style="-fx-padding: 16;">
                     <VBox spacing="8" prefWidth="420">
                         <Label text="All Registered Restaurants"
-                               style="-fx-font-weight: bold;
-                                      -fx-text-fill: #1C3A5E;
-                                      -fx-font-size: 12px;"/>
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
                         <ListView fx:id="restaurantListView"
                                   prefHeight="400"
                                   onMouseClicked="#handleRestaurantSelected"
-                                  style="-fx-border-color: #CBD5E0;
-                                         -fx-border-radius: 8;"/>
+                                  style="-fx-border-color: #CBD5E0; -fx-border-radius: 8;"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                         <Label text="Restaurant Details"
-                               style="-fx-font-weight: bold;
-                                      -fx-text-fill: #1C3A5E;
-                                      -fx-font-size: 12px;"/>
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
                         <TextArea fx:id="restaurantDetailArea"
                                   prefHeight="400"
                                   editable="false"
@@ -135,16 +122,64 @@
                     </VBox>
                 </HBox>
             </Tab>
+
+            <Tab text="Deliveries">
+                <HBox spacing="16" style="-fx-padding: 16;">
+                    <VBox spacing="10" prefWidth="420">
+                        <Label text="Delivery Management"
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
+                        <HBox spacing="8">
+                            <Button text="All Deliveries"
+                                    onAction="#handleShowAllDeliveries"
+                                    HBox.hgrow="ALWAYS"
+                                    maxWidth="Infinity"
+                                    prefHeight="34"
+                                    style="-fx-background-color: #1C3A5E;
+                                           -fx-text-fill: white;
+                                           -fx-font-weight: bold;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;"/>
+                            <Button text="Ongoing Delivery"
+                                    onAction="#handleShowOngoingDeliveries"
+                                    HBox.hgrow="ALWAYS"
+                                    maxWidth="Infinity"
+                                    prefHeight="34"
+                                    style="-fx-background-color: #FF7A00;
+                                           -fx-text-fill: white;
+                                           -fx-font-weight: bold;
+                                           -fx-background-radius: 7;
+                                           -fx-cursor: hand;"/>
+                        </HBox>
+                        <ListView fx:id="deliveryListView"
+                                  prefHeight="340"
+                                  onMouseClicked="#handleDeliverySelected"
+                                  style="-fx-border-color: #CBD5E0; -fx-border-radius: 8;"/>
+                        <Label fx:id="deliveryStatus" text=""
+                               style="-fx-font-size: 11px;"
+                               wrapText="true"/>
+                    </VBox>
+
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Delivery Details"
+                               style="-fx-font-weight: bold; -fx-text-fill: #1C3A5E; -fx-font-size: 12px;"/>
+                        <TextArea fx:id="deliveryDetailArea"
+                                  prefHeight="400"
+                                  editable="false"
+                                  promptText="Click a delivery to view details..."
+                                  style="-fx-font-family: monospace;
+                                         -fx-font-size: 11px;
+                                         -fx-border-color: #CBD5E0;
+                                         -fx-border-radius: 8;"/>
+                    </VBox>
+                </HBox>
+            </Tab>
         </TabPane>
     </center>
 
-    <!-- BOTTOM STATUS BAR -->
     <bottom>
-        <HBox style="-fx-background-color: #E2E8F0;
-                     -fx-padding: 6 18;">
+        <HBox style="-fx-background-color: #E2E8F0; -fx-padding: 6 18;">
             <Label fx:id="globalStatus" text=""
-                   style="-fx-text-fill: #475569;
-                          -fx-font-size: 11px;"/>
+                   style="-fx-text-fill: #475569; -fx-font-size: 11px;"/>
         </HBox>
     </bottom>
 </BorderPane>
