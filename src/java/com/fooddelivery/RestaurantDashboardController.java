@@ -296,7 +296,7 @@ public class RestaurantDashboardController {
         }
     }
 
-    // ================= NAVIGATION (NEW) =================
+    //NAVIGATION
 
     @FXML
     private void goHome() {
@@ -313,17 +313,25 @@ public class RestaurantDashboardController {
         tabPane.getSelectionModel().select(2);
     }
 
-    @FXML
-    private void goBookings() {
-        menuStatus.setText("Bookings coming soon.");
-    }
+@FXML
+private void goBookings() {
+    tabPane.getSelectionModel().select(1); // goes to Orders tab
+}
 
-    @FXML
-    private void goProfile() {
-        menuStatus.setText("Profile coming soon.");
+@FXML
+private void goProfile() {
+    if (myRestaurant != null) {
+        menuStatus.setText(
+            "📍 " + myRestaurant.getRestaurantName()
+            + "  |  " + myRestaurant.getCuisineType()
+            + "  |  ⭐ " + String.format("%.1f", myRestaurant.getRating())
+            + "  |  " + myRestaurant.getAddress()
+            + "  |  Hours: " + myRestaurant.getOperatingHours()
+        );
     }
+}
 
-    // ================= HOVER EFFECT (NEW) =================
+    //hover effects
 
     @FXML
     private void hoverIn(MouseEvent event) {

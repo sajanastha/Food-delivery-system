@@ -89,4 +89,23 @@ public class MenuItemDAO {
         m.setAvailable(rs.getInt("isAvailable") == 1);
         return m;
     }
+    // Added for search and home page
+    public List<MenuItem> getAllMenuItems() throws SQLException {
+        List<MenuItem> list = new ArrayList<>();
+        String sql = "SELECT * FROM menu_items WHERE isAvailable=1 ORDER BY category, name";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+    public List<MenuItem> searchByName(String keyword) throws SQLException {
+        List<MenuItem> list = new ArrayList<>();
+        String sql = "SELECT * FROM menu_items WHERE isAvailable=1 AND LOWER(name) LIKE ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + keyword.toLowerCase() + "%");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
 }
