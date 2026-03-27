@@ -59,6 +59,18 @@ public class RestaurantDAO {
         return null;
     }
 
+    public Restaurant getById(int restaurantID) throws SQLException {
+        String sql = "SELECT r.*,u.email,u.password,u.fullName,u.phone " +
+                "FROM restaurants r JOIN users u ON r.ownerUserID=u.userID " +
+                "WHERE r.restaurantID=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restaurantID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return map(rs);
+        }
+        return null;
+    }
+
     private Restaurant map(ResultSet rs) throws SQLException {
         Restaurant r = new Restaurant(
             rs.getInt("ownerUserID"), rs.getString("email"),

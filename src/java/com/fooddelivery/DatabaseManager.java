@@ -95,6 +95,19 @@ public class DatabaseManager {
                 "FOREIGN KEY (menuItemID) REFERENCES menu_items(itemID)" +
                 ") ENGINE=InnoDB");
 
+            s.execute("CREATE TABLE IF NOT EXISTS feedbacks (" +
+                "feedbackID INT PRIMARY KEY AUTO_INCREMENT," +
+                "customerID INT NOT NULL," +
+                "restaurantID INT NOT NULL," +
+                "orderItemID INT NOT NULL UNIQUE," +
+                "rating INT NOT NULL," +
+                "comment TEXT," +
+                "createdAt VARCHAR(50)," +
+                "FOREIGN KEY (customerID) REFERENCES users(userID)," +
+                "FOREIGN KEY (restaurantID) REFERENCES restaurants(restaurantID)," +
+                "FOREIGN KEY (orderItemID) REFERENCES order_items(orderItemID)" +
+                ") ENGINE=InnoDB");
+
             System.out.println("All tables ready.");
         } catch (SQLException e) {
             System.err.println("Tables error: " + e.getMessage());
