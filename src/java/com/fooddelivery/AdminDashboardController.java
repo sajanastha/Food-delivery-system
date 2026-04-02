@@ -278,7 +278,7 @@ public class AdminDashboardController {
     @FXML
     private void handleLogout(ActionEvent event) {
         SessionManager.getInstance().logout();
-        loadScreen(event, "/com/fooddelivery/views/Login.fxml", "Login");
+        loadScreen(event, "/com/fooddelivery/views/LogIn.fxml", "Login");
     }
 
     private void loadScreen(ActionEvent event, String path, String title) {
@@ -286,7 +286,9 @@ public class AdminDashboardController {
             Parent root = FXMLLoader.load(getClass().getResource(path));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setTitle("Food Delivery - " + title);
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setScene(new Scene(root, 480, 520));
+            stage.setResizable(false);
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

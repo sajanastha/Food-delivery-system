@@ -35,7 +35,8 @@
 
             <HBox spacing="4"
                   style="-fx-padding: 0 24 0 24;">
-                <Button text="Home"
+                <Button fx:id="homeTabButton"
+                        text="Home"
                         onAction="#showHomeTab"
                         style="-fx-background-color: transparent;
                                -fx-text-fill: #F97316;
@@ -43,21 +44,24 @@
                                -fx-font-weight: bold;
                                -fx-padding: 10 18;
                                -fx-cursor: hand;"/>
-                <Button text="Order Food"
+                <Button fx:id="orderTabButton"
+                        text="Order Food"
                         onAction="#showOrderTab"
                         style="-fx-background-color: transparent;
                                -fx-text-fill: #64748B;
                                -fx-font-size: 13px;
                                -fx-padding: 10 18;
                                -fx-cursor: hand;"/>
-                <Button text="Order History"
+                <Button fx:id="historyTabButton"
+                        text="Order History"
                         onAction="#showHistoryTab"
                         style="-fx-background-color: transparent;
                                -fx-text-fill: #64748B;
                                -fx-font-size: 13px;
                                -fx-padding: 10 18;
                                -fx-cursor: hand;"/>
-                <Button text="My Profile"
+                <Button fx:id="profileTabButton"
+                        text="My Profile"
                         onAction="#showProfile"
                         style="-fx-background-color: transparent;
                                -fx-text-fill: #64748B;

@@ -112,8 +112,15 @@ public class LoginController {
             Stage stage = (Stage)((Node) event.getSource())
                               .getScene().getWindow();
             stage.setTitle("Food Delivery — " + title);
-            stage.setScene(new Scene(root));
-            stage.setResizable(true);
+            if (fxmlPath.contains("Dashboard")) {
+                stage.setScene(new Scene(root));
+                stage.setResizable(true);
+                stage.setMaximized(true);
+            } else {
+                stage.setMaximized(false);
+                stage.setScene(new Scene(root, 480, 520));
+                stage.setResizable(false);
+            }
             stage.show();
         } catch (Exception e) {
             showError("Screen failed to load: " + fxmlPath);

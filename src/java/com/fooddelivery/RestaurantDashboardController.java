@@ -460,7 +460,9 @@ public class RestaurantDashboardController {
             Stage stage = (Stage) ((Node) e.getSource())
                               .getScene().getWindow();
             stage.setTitle("Food Delivery — " + title);
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setScene(new Scene(root, 480, 520));
+            stage.setResizable(false);
             stage.show();
         } catch (Exception ex) {
             ex.printStackTrace();

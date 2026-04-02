@@ -16,7 +16,7 @@ public class Main extends Application {
 
         // Load the login screen
         Parent root = FXMLLoader.load(
-            getClass().getResource("/com/fooddelivery/views/Login.fxml")
+            getClass().getResource("/com/fooddelivery/views/LogIn.fxml")
         );
 
         stage.setTitle("Food Delivery System");

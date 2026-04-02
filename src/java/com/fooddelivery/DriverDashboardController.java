@@ -362,7 +362,9 @@ public class DriverDashboardController {
             Parent root = FXMLLoader.load(getClass().getResource(path));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setTitle("Food Delivery - " + title);
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setScene(new Scene(root, 480, 520));
+            stage.setResizable(false);
             stage.show();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);

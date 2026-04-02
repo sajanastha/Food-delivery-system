@@ -33,7 +33,30 @@ import java.util.Set;
 
 public class CustomerDashboardController {
 
+    private static final String ACTIVE_TAB_STYLE =
+            "-fx-background-color: transparent;"
+                    + "-fx-text-fill: #F97316;"
+                    + "-fx-font-size: 13px;"
+                    + "-fx-font-weight: bold;"
+                    + "-fx-padding: 10 18;"
+                    + "-fx-cursor: hand;"
+                    + "-fx-border-color: transparent transparent #F97316 transparent;"
+                    + "-fx-border-width: 0 0 2 0;";
+
+    private static final String INACTIVE_TAB_STYLE =
+            "-fx-background-color: transparent;"
+                    + "-fx-text-fill: #64748B;"
+                    + "-fx-font-size: 13px;"
+                    + "-fx-padding: 10 18;"
+                    + "-fx-cursor: hand;"
+                    + "-fx-border-color: transparent transparent transparent transparent;"
+                    + "-fx-border-width: 0 0 2 0;";
+
     @FXML private Label welcomeLabel;
+    @FXML private Button homeTabButton;
+    @FXML private Button orderTabButton;
+    @FXML private Button historyTabButton;
+    @FXML private Button profileTabButton;
 
     @FXML private VBox homePanel;
     @FXML private Label homeDateLabel;
@@ -91,6 +114,7 @@ public class CustomerDashboardController {
 
     @FXML
     public void showHomeTab(ActionEvent event) {
+        setActiveTab(homeTabButton);
         homePanel.setVisible(true);
         homePanel.setManaged(true);
         orderPanel.setVisible(false);
@@ -104,6 +128,7 @@ public class CustomerDashboardController {
 
     @FXML
     public void showOrderTab(ActionEvent event) {
+        setActiveTab(orderTabButton);
         homePanel.setVisible(false);
         homePanel.setManaged(false);
         orderPanel.setVisible(true);
@@ -116,6 +141,7 @@ public class CustomerDashboardController {
 
     @FXML
     public void showHistoryTab(ActionEvent event) {
+        setActiveTab(historyTabButton);
         homePanel.setVisible(false);
         homePanel.setManaged(false);
         orderPanel.setVisible(false);
@@ -129,6 +155,7 @@ public class CustomerDashboardController {
 
     @FXML
     public void showProfile(ActionEvent event) {
+        setActiveTab(profileTabButton);
         homePanel.setVisible(false);
         homePanel.setManaged(false);
         orderPanel.setVisible(false);
@@ -662,6 +689,14 @@ public class CustomerDashboardController {
         profileRoleLabel.setText("Role: Customer");
     }
 
+    private void setActiveTab(Button activeTab) {
+        homeTabButton.setStyle(INACTIVE_TAB_STYLE);
+        orderTabButton.setStyle(INACTIVE_TAB_STYLE);
+        historyTabButton.setStyle(INACTIVE_TAB_STYLE);
+        profileTabButton.setStyle(INACTIVE_TAB_STYLE);
+        activeTab.setStyle(ACTIVE_TAB_STYLE);
+    }
+
     @FXML
     private void handleLogout(ActionEvent event) {
         SessionManager.getInstance().logout();
@@ -754,7 +789,9 @@ public class CustomerDashboardController {
             Parent root = FXMLLoader.load(getClass().getResource(path));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setTitle("Food Delivery - " + title);
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setScene(new Scene(root, 480, 520));
+            stage.setResizable(false);
             stage.show();
         } catch (Exception ex) {
             ex.printStackTrace();
