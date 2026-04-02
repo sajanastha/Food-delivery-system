@@ -17,7 +17,6 @@ public class RegisterCustomerController {
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmField;
     @FXML private TextField     phoneField;
-    @FXML private TextField     addressField;
     @FXML private Label         errorLabel;
     @FXML private Label         successLabel;
 
@@ -110,7 +109,6 @@ public class RegisterCustomerController {
         passwordField.clear();
         confirmField.clear();
         phoneField.clear();
-        addressField.clear();
     }
 
     private void loadScreen(ActionEvent event,

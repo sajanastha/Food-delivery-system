@@ -67,30 +67,15 @@
                 </VBox>
             </HBox>
 
-            <HBox spacing="12">
-                <VBox spacing="3" HBox.hgrow="ALWAYS">
-                    <Label text="Phone"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #374151;"/>
-                    <TextField fx:id="phoneField"
-                               promptText="Phone number"
-                               style="-fx-border-color: #D1D5DB;
-                                      -fx-border-radius: 7;
-                                      -fx-background-radius: 7;
-                                      -fx-padding: 8 10;"/>
-                </VBox>
-                <VBox spacing="3" HBox.hgrow="ALWAYS">
-                    <Label text="Delivery Address"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #374151;"/>
-                    <TextField fx:id="addressField"
-                               promptText="Your address"
-                               style="-fx-border-color: #D1D5DB;
-                                      -fx-border-radius: 7;
-                                      -fx-background-radius: 7;
-                                      -fx-padding: 8 10;"/>
-                </VBox>
-            </HBox>
+            <Label text="Phone"
+                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                          -fx-text-fill: #374151;"/>
+            <TextField fx:id="phoneField"
+                       promptText="Phone number"
+                       style="-fx-border-color: #D1D5DB;
+                              -fx-border-radius: 7;
+                              -fx-background-radius: 7;
+                              -fx-padding: 8 10;"/>
 
             <!-- Status labels -->
             <Label fx:id="errorLabel" text=""
