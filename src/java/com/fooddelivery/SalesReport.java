@@ -27,4 +27,9 @@ public class SalesReport {
             reportType, fromDate, toDate,
             totalOrders, totalRevenue, topSellingItem);
     }
+
+    // ── Getters (were missing — caused red lines in controller) ──
+    public int    getTotalOrders()    { return totalOrders; }
+    public double getTotalRevenue()   { return totalRevenue; }
+    public String getTopSellingItem() { return topSellingItem; }
 }
