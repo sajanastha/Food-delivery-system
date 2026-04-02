@@ -7,6 +7,21 @@ public class FeedbackDAO {
     private final Connection conn =
             DatabaseManager.getInstance().getConnection();
 
+    public FeedbackEntry getByCustomerAndOrder(int customerID,
+            int orderID) throws SQLException {
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? " +
+                "AND orderItemID=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerID);
+            ps.setInt(2, orderID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return map(rs);
+            }
+        }
+        return null;
+    }
+
     public void saveOrUpdate(int customerID, int restaurantID,
             int orderID, int rating, String comment)
             throws SQLException {
@@ -41,5 +56,17 @@ public class FeedbackDAO {
             ps.setString(6, LocalDateTime.now().toString());
             ps.executeUpdate();
         }
+    }
+
+    private FeedbackEntry map(ResultSet rs) throws SQLException {
+        FeedbackEntry entry = new FeedbackEntry();
+        entry.setFeedbackID(rs.getInt("feedbackID"));
+        entry.setCustomerID(rs.getInt("customerID"));
+        entry.setRestaurantID(rs.getInt("restaurantID"));
+        entry.setOrderItemID(rs.getInt("orderItemID"));
+        entry.setRating(rs.getInt("rating"));
+        entry.setComment(rs.getString("comment"));
+        entry.setCreatedAt(rs.getString("createdAt"));
+        return entry;
     }
 }

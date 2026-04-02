@@ -159,6 +159,52 @@ public class OrderDAO {
         return list;
     }
 
+    public List<String> getTopRestaurantsForToday(int limit)
+            throws SQLException {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT r.restaurantName, COUNT(*) AS totalOrders " +
+                "FROM orders o " +
+                "JOIN restaurants r ON o.restaurantID=r.restaurantID " +
+                "WHERE o.orderTime LIKE ? " +
+                "GROUP BY r.restaurantID, r.restaurantName " +
+                "ORDER BY totalOrders DESC, r.restaurantName ASC " +
+                "LIMIT ?";
+        String today = LocalDateTime.now().toLocalDate().toString() + "%";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, today);
+            ps.setInt(2, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("restaurantName")
+                        + " - " + rs.getInt("totalOrders") + " order(s)");
+            }
+        }
+        return list;
+    }
+
+    public List<String> getTopFoodsForToday(int limit)
+            throws SQLException {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT oi.itemName, SUM(oi.quantity) AS totalQty " +
+                "FROM order_items oi " +
+                "JOIN orders o ON oi.orderID=o.orderID " +
+                "WHERE o.orderTime LIKE ? " +
+                "GROUP BY oi.itemName " +
+                "ORDER BY totalQty DESC, oi.itemName ASC " +
+                "LIMIT ?";
+        String today = LocalDateTime.now().toLocalDate().toString() + "%";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, today);
+            ps.setInt(2, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("itemName")
+                        + " - " + rs.getInt("totalQty") + " sold");
+            }
+        }
+        return list;
+    }
+
     public void updateStatus(int orderID, OrderStatus status)
             throws SQLException {
         String sql = "UPDATE orders SET status=? " +
