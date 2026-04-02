@@ -100,9 +100,35 @@ public class OrderDAO {
             throws SQLException {
         List<Order> list = new ArrayList<>();
         String sql = "SELECT * FROM orders " +
-                "WHERE status='CONFIRMED' AND driverID=0";
+                "WHERE status='CONFIRMED' AND driverID=0 " +
+                "ORDER BY orderTime DESC";
         try (Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Order o = map(rs);
+                o.setItems(itemsFor(o.getOrderID()));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
+    public List<Order> getByDriver(int driverID)
+            throws SQLException {
+        return query(
+            "SELECT * FROM orders WHERE driverID=? " +
+            "ORDER BY orderTime DESC", driverID);
+    }
+
+    public List<Order> getByDriverAndStatus(int driverID,
+            OrderStatus status) throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE driverID=? " +
+                "AND status=? ORDER BY orderTime DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, driverID);
+            ps.setString(2, status.name());
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Order o = map(rs);
                 o.setItems(itemsFor(o.getOrderID()));

@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fooddelivery.DriverDashboardController"
+            prefWidth="1120" prefHeight="760"
+            style="-fx-background-color: #F4F7FB;">
+
+    <top>
+        <VBox style="-fx-background-color: linear-gradient(to right, #0F766E, #155E75);
+                     -fx-padding: 18 24 18 24;">
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <VBox spacing="4">
+                    <Label text="Driver Operations"
+                           style="-fx-text-fill: white;
+                                  -fx-font-size: 22px;
+                                  -fx-font-weight: bold;"/>
+                    <Label fx:id="welcomeLabel"
+                           style="-fx-text-fill: #CCFBF1;
+                                  -fx-font-size: 13px;"/>
+                </VBox>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <VBox alignment="CENTER_RIGHT" spacing="6">
+                    <Label fx:id="availabilityLabel"
+                           style="-fx-text-fill: #ECFEFF;
+                                  -fx-font-size: 12px;
+                                  -fx-font-weight: bold;"/>
+                    <CheckBox fx:id="availabilityToggle"
+                              text="Available for new requests"
+                              onAction="#handleAvailabilityChanged"
+                              style="-fx-text-fill: white;"/>
+                </VBox>
+                <Button text="Refresh"
+                        onAction="#handleRefresh"
+                        style="-fx-background-color: rgba(255,255,255,0.18);
+                               -fx-text-fill: white;
+                               -fx-background-radius: 8;
+                               -fx-padding: 8 18;
+                               -fx-cursor: hand;"/>
+                <Button text="Logout"
+                        onAction="#handleLogout"
+                        style="-fx-background-color: white;
+                               -fx-text-fill: #155E75;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 8;
+                               -fx-padding: 8 18;
+                               -fx-cursor: hand;"/>
+            </HBox>
+
+            <Label fx:id="summaryLabel"
+                   style="-fx-text-fill: #CFFAFE;
+                          -fx-font-size: 12px;
+                          -fx-padding: 10 0 0 0;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="16" style="-fx-padding: 18 20 20 20;">
+            <VBox spacing="12" prefWidth="360">
+                <VBox spacing="10"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-padding: 16;
+                             -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 16, 0, 0, 3);">
+                    <Label text="Delivery Requests"
+                           style="-fx-font-size: 15px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #0F172A;"/>
+                    <Label text="View order requests, then accept or skip them."
+                           style="-fx-font-size: 11px;
+                                  -fx-text-fill: #64748B;"/>
+                    <ListView fx:id="requestListView"
+                              prefHeight="220"
+                              onMouseClicked="#handleRequestSelected"
+                              style="-fx-border-color: #E2E8F0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;"/>
+                    <TextArea fx:id="requestDetailArea"
+                              prefHeight="170"
+                              editable="false"
+                              wrapText="true"
+                              style="-fx-font-family: Consolas;
+                                     -fx-font-size: 12px;
+                                     -fx-border-color: #E2E8F0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;"/>
+                    <HBox spacing="10">
+                        <Button text="Accept Request"
+                                onAction="#handleAcceptRequest"
+                                HBox.hgrow="ALWAYS"
+                                maxWidth="Infinity"
+                                style="-fx-background-color: #0F766E;
+                                       -fx-text-fill: white;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 8;
+                                       -fx-padding: 10 14;
+                                       -fx-cursor: hand;"/>
+                        <Button text="Skip"
+                                onAction="#handleRejectRequest"
+                                HBox.hgrow="ALWAYS"
+                                maxWidth="Infinity"
+                                style="-fx-background-color: #FFF7ED;
+                                       -fx-text-fill: #C2410C;
+                                       -fx-font-weight: bold;
+                                       -fx-border-color: #FED7AA;
+                                       -fx-border-radius: 8;
+                                       -fx-background-radius: 8;
+                                       -fx-padding: 10 14;
+                                       -fx-cursor: hand;"/>
+                    </HBox>
+                    <Label fx:id="requestStatus"
+                           text=""
+                           wrapText="true"
+                           style="-fx-text-fill: #475569;
+                                  -fx-font-size: 12px;"/>
+                </VBox>
+
+                <VBox spacing="10"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-padding: 16;
+                             -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 16, 0, 0, 3);">
+                    <Label text="Driver Profile"
+                           style="-fx-font-size: 15px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #0F172A;"/>
+                    <TextArea fx:id="profileArea"
+                              prefHeight="150"
+                              editable="false"
+                              style="-fx-font-size: 12px;
+                                     -fx-border-color: #E2E8F0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;"/>
+                </VBox>
+            </VBox>
+
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
+                <VBox spacing="10"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-padding: 16;
+                             -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 16, 0, 0, 3);">
+                    <Label text="Current Delivery"
+                           style="-fx-font-size: 15px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #0F172A;"/>
+                    <Label text="Track active deliveries and update status after handoff."
+                           style="-fx-font-size: 11px;
+                                  -fx-text-fill: #64748B;"/>
+                    <ListView fx:id="activeDeliveryListView"
+                              prefHeight="170"
+                              onMouseClicked="#handleActiveSelected"
+                              style="-fx-border-color: #E2E8F0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;"/>
+                    <TextArea fx:id="activeDetailArea"
+                              prefHeight="180"
+                              editable="false"
+                              wrapText="true"
+                              style="-fx-font-family: Consolas;
+                                     -fx-font-size: 12px;
+                                     -fx-border-color: #E2E8F0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;"/>
+                    <HBox spacing="10">
+                        <Button text="Mark Delivered"
+                                onAction="#handleMarkDelivered"
+                                HBox.hgrow="ALWAYS"
+                                maxWidth="Infinity"
+                                style="-fx-background-color: #2563EB;
+                                       -fx-text-fill: white;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 8;
+                                       -fx-padding: 10 14;
+                                       -fx-cursor: hand;"/>
+                        <Button text="Cancel Delivery"
+                                onAction="#handleCancelDelivery"
+                                HBox.hgrow="ALWAYS"
+                                maxWidth="Infinity"
+                                style="-fx-background-color: #FEF2F2;
+                                       -fx-text-fill: #DC2626;
+                                       -fx-font-weight: bold;
+                                       -fx-border-color: #FECACA;
+                                       -fx-border-radius: 8;
+                                       -fx-background-radius: 8;
+                                       -fx-padding: 10 14;
+                                       -fx-cursor: hand;"/>
+                    </HBox>
+                    <Label fx:id="activeStatus"
+                           text=""
+                           wrapText="true"
+                           style="-fx-text-fill: #475569;
+                                  -fx-font-size: 12px;"/>
+                </VBox>
+
+                <VBox spacing="10"
+                      VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-padding: 16;
+                             -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 16, 0, 0, 3);">
+                    <Label text="Delivery History"
+                           style="-fx-font-size: 15px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #0F172A;"/>
+                    <Label text="Review finished or cancelled deliveries."
+                           style="-fx-font-size: 11px;
+                                  -fx-text-fill: #64748B;"/>
+                    <SplitPane dividerPositions="0.42" VBox.vgrow="ALWAYS">
+                        <items>
+                            <ListView fx:id="historyListView"
+                                      onMouseClicked="#handleHistorySelected"
+                                      style="-fx-border-color: #E2E8F0;
+                                             -fx-border-radius: 8;
+                                             -fx-background-radius: 8;"/>
+                            <TextArea fx:id="historyDetailArea"
+                                      editable="false"
+                                      wrapText="true"
+                                      style="-fx-font-family: Consolas;
+                                             -fx-font-size: 12px;
+                                             -fx-border-color: #E2E8F0;
+                                             -fx-border-radius: 8;
+                                             -fx-background-radius: 8;"/>
+                        </items>
+                    </SplitPane>
+                    <Label fx:id="historyStatus"
+                           text=""
+                           wrapText="true"
+                           style="-fx-text-fill: #475569;
+                                  -fx-font-size: 12px;"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>
