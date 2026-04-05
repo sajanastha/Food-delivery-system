@@ -42,6 +42,7 @@ public class RestaurantDashboardController {
     @FXML private Button ordersTabButton;
     @FXML private Button reportsTabButton;
     @FXML private Button feedbackTabButton;
+    @FXML private Button profileTabButton;
 
     // Menu panel
     @FXML private ListView<String> menuListView;
@@ -66,6 +67,11 @@ public class RestaurantDashboardController {
     @FXML private VBox ordersPanel;
     @FXML private VBox reportsPanel;
     @FXML private VBox feedbackPanel;
+    @FXML private VBox profilePanel;
+    @FXML private Label profileNameLabel;
+    @FXML private Label profileEmailLabel;
+    @FXML private Label profilePhoneLabel;
+    @FXML private Label profileRoleLabel;
 
     private final MenuItemDAO   menuItemDAO   = new MenuItemDAO();
     private final OrderDAO      orderDAO      = new OrderDAO();
@@ -94,7 +100,16 @@ public class RestaurantDashboardController {
         } catch (SQLException e) {
             menuStatus.setText("Error loading data.");
         }
+        setProfileInfo(owner);
         showPanel("menu");
+    }
+
+    private void setProfileInfo(Restaurant owner) {
+        profileNameLabel.setText("Name: " + owner.getFullName());
+        profileEmailLabel.setText("Email: " + owner.getEmail());
+        profilePhoneLabel.setText("Phone: " + (owner.getPhone() == null || owner.getPhone().isBlank()
+                ? "Not provided" : owner.getPhone()));
+        profileRoleLabel.setText("Role: Restaurant Owner");
     }
 
     // ── Panel switching ───────────────────────────────────────────
