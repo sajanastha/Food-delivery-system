@@ -107,6 +107,8 @@ public class RestaurantDashboardController {
         reportsPanel.setManaged(false);
         feedbackPanel.setVisible(false);
         feedbackPanel.setManaged(false);
+        profilePanel.setVisible(false);
+        profilePanel.setManaged(false);
         switch (name) {
             case "menu" -> {
                 menuPanel.setVisible(true);
@@ -128,6 +130,11 @@ public class RestaurantDashboardController {
                 feedbackPanel.setManaged(true);
                 setActiveTab(feedbackTabButton);
             }
+            case "profile" -> {
+                profilePanel.setVisible(true);
+                profilePanel.setManaged(true);
+                setActiveTab(profileTabButton);
+            }
         }
     }
 
@@ -135,6 +142,7 @@ public class RestaurantDashboardController {
     @FXML private void goOrders(ActionEvent e)   { showPanel("orders"); loadOrdersSafe(); }
     @FXML private void goReports(ActionEvent e)  { showPanel("reports"); }
     @FXML private void goFeedback(ActionEvent e) { showPanel("feedback"); }
+    @FXML private void goProfile(ActionEvent e)  { showPanel("profile"); }
 
     // ── Menu ─────────────────────────────────────────────────────
     private static final List<String> CATEGORY_ORDER =
@@ -346,6 +354,7 @@ public class RestaurantDashboardController {
         ordersTabButton.setStyle(INACTIVE_TAB_STYLE);
         reportsTabButton.setStyle(INACTIVE_TAB_STYLE);
         feedbackTabButton.setStyle(INACTIVE_TAB_STYLE);
+        profileTabButton.setStyle(INACTIVE_TAB_STYLE);
         activeTab.setStyle(ACTIVE_TAB_STYLE);
     }
 
