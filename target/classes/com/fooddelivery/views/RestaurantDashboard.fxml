@@ -26,16 +26,6 @@
                    text=""
                    style="-fx-text-fill: rgba(255,255,255,0.8);
                           -fx-font-size: 12px;"/>
-            <Button text="Logout"
-                    onAction="#handleLogout"
-                    style="-fx-background-color: rgba(255,255,255,0.18);
-                           -fx-text-fill: white;
-                           -fx-border-color: rgba(255,255,255,0.5);
-                           -fx-border-radius: 8;
-                           -fx-background-radius: 8;
-                           -fx-font-size: 12px;
-                           -fx-padding: 6 16;
-                           -fx-cursor: hand;"/>
         </HBox>
     </top>
 
@@ -369,6 +359,57 @@
                 </VBox>
             </VBox>
 
+            <VBox fx:id="profilePanel" spacing="14"
+                  visible="false" managed="false"
+                  style="-fx-padding: 18;">
+                <Label text="Profile"
+                       style="-fx-font-size: 18px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #2D2D2D;"/>
+                <VBox spacing="16"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 14;
+                             -fx-padding: 28;
+                             -fx-border-color: #d8d8b8;
+                             -fx-border-radius: 14;
+                             -fx-border-width: 1;
+                             -fx-max-width: 520;">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="👤"
+                               style="-fx-font-size: 32px;"/>
+                        <Label text="Account Information"
+                               style="-fx-font-size: 16px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #2D2D2D;"/>
+                    </HBox>
+                    <Separator style="-fx-background-color: #e8e8c8;"/>
+                    <Label fx:id="profileNameLabel"
+                           style="-fx-font-size: 13px;
+                                  -fx-text-fill: #555;"/>
+                    <Label fx:id="profileEmailLabel"
+                           style="-fx-font-size: 13px;
+                                  -fx-text-fill: #555;"/>
+                    <Label fx:id="profilePhoneLabel"
+                           style="-fx-font-size: 13px;
+                                  -fx-text-fill: #555;"/>
+                    <Label fx:id="profileRoleLabel"
+                           style="-fx-font-size: 12px;
+                                  -fx-text-fill: #4d9078;
+                                  -fx-font-weight: bold;"/>
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button text="Logout"
+                                onAction="#handleLogout"
+                                style="-fx-background-color: #FF7518;
+                                       -fx-text-fill: white;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 10;
+                                       -fx-font-size: 13px;
+                                       -fx-padding: 10 18;
+                                       -fx-cursor: hand;"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
         </StackPane>
     </center>
 
@@ -414,6 +455,17 @@
             <Button fx:id="feedbackTabButton"
                     text="💬  Feedback"
                     onAction="#goFeedback"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"
+                    prefHeight="54"
+                    style="-fx-background-color: #F5F5DC;
+                           -fx-text-fill: #555;
+                           -fx-font-size: 13px;
+                           -fx-cursor: hand;
+                           -fx-background-radius: 0;"/>
+            <Button fx:id="profileTabButton"
+                    text="👤  Profile"
+                    onAction="#goProfile"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
                     prefHeight="54"
