@@ -26,7 +26,13 @@ public class OrderDAO {
                 ps.setString(6, LocalDateTime.now().toString());
                 ps.setInt(7, 0);
                 ps.executeUpdate();
-                newID = ps.getGeneratedKeys().getInt(1);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        newID = rs.getInt(1);
+                    } else {
+                        throw new SQLException("Failed to get generated order ID");
+                    }
+                }
             }
             String iSql = "INSERT INTO order_items " +
                     "(orderID,menuItemID,itemName," +

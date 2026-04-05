@@ -20,6 +20,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -27,8 +28,10 @@ import javafx.stage.StageStyle;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class CustomerDashboardController {
@@ -61,8 +64,10 @@ public class CustomerDashboardController {
     @FXML private VBox homePanel;
     @FXML private Label homeDateLabel;
     @FXML private Label homeStatusLabel;
-    @FXML private ListView<String> topFoodsListView;
-    @FXML private ListView<String> topRestaurantsListView;
+    @FXML private HBox topRestaurantsBox;
+    @FXML private HBox topFoodsBox;
+    @FXML private HBox recommendationsBox;
+    @FXML private Label recommendSubLabel;
 
     @FXML private VBox orderPanel;
     @FXML private TextField searchField;
@@ -169,25 +174,226 @@ public class CustomerDashboardController {
 
     private void loadHomeInsights() {
         homeDateLabel.setText("Today: " + LocalDate.now());
+        homeStatusLabel.setText("Top picks based on today's orders.");
+
         try {
-            List<String> topFoods = orderDAO.getTopFoodsForToday(3);
-            List<String> topRestaurants = orderDAO.getTopRestaurantsForToday(3);
+            // ── Restaurant Near You (top 4 by today's orders) ────────────────
+            topRestaurantsBox.getChildren().clear();
+            List<String> topRestNames = orderDAO.getTopRestaurantsForToday(4);
+            List<Restaurant> allRests = restaurantDAO.getAll();
 
-            if (topFoods.isEmpty()) {
-                topFoods.add("No food orders yet today.");
-            }
-            if (topRestaurants.isEmpty()) {
-                topRestaurants.add("No restaurant orders yet today.");
+            if (topRestNames.isEmpty()) {
+                // fallback: show all restaurants randomly up to 4
+                Collections.shuffle(allRests, new Random());
+                for (Restaurant r : allRests.subList(0, Math.min(4, allRests.size())))
+                    topRestaurantsBox.getChildren().add(makeRestCard(r));
+            } else {
+                for (String entry : topRestNames) {
+                    String name = entry.contains(" - ") ? entry.split(" - ")[0].trim() : entry;
+                    for (Restaurant r : allRests) {
+                        if (r.getRestaurantName().equalsIgnoreCase(name)) {
+                            topRestaurantsBox.getChildren().add(makeRestCard(r));
+                            break;
+                        }
+                    }
+                }
             }
 
-            topFoodsListView.setItems(FXCollections.observableArrayList(topFoods));
-            topRestaurantsListView.setItems(FXCollections.observableArrayList(topRestaurants));
-            homeStatusLabel.setText("Top 3 popular foods and restaurants based on today's orders.");
+            // ── Top Popular Foods (top 4 by today's orders) ──────────────────
+            topFoodsBox.getChildren().clear();
+            List<String> topFoodNames = orderDAO.getTopFoodsForToday(4);
+
+            if (topFoodNames.isEmpty()) {
+                // fallback: random items from all menus
+                List<MenuItem> all = menuItemDAO.getAllMenuItems();
+                Collections.shuffle(all, new Random());
+                for (MenuItem mi : all.subList(0, Math.min(4, all.size())))
+                    topFoodsBox.getChildren().add(makeFoodCard(mi.getName(),
+                            "NPR " + String.format("%.0f", mi.getPrice()), mi.getCategory()));
+            } else {
+                for (String entry : topFoodNames) {
+                    String name = entry.contains(" - ") ? entry.split(" - ")[0].trim() : entry;
+                    topFoodsBox.getChildren().add(makeFoodCard(name, "", ""));
+                }
+            }
+
+            // ── Recommendations ───────────────────────────────────────────────
+            loadRecommendations(allRests);
+
         } catch (SQLException e) {
-            homeStatusLabel.setText("Could not load today's popularity data.");
-            topFoodsListView.setItems(FXCollections.observableArrayList("Unavailable"));
-            topRestaurantsListView.setItems(FXCollections.observableArrayList("Unavailable"));
+            homeStatusLabel.setText("Could not load data.");
         }
+    }
+
+    private void loadRecommendations(List<Restaurant> allRests) throws SQLException {
+        recommendationsBox.getChildren().clear();
+        Customer me = (Customer) SessionManager.getInstance().getCurrentUser();
+        List<Order> history = orderDAO.getByCustomer(me.getUserID());
+
+        List<MenuItem> candidates = new ArrayList<>();
+
+        if (history.isEmpty()) {
+            // No history → random items across all restaurants
+            recommendSubLabel.setText("  Discover something new!");
+            List<MenuItem> all = menuItemDAO.getAllMenuItems();
+            Collections.shuffle(all, new Random());
+            candidates = all.subList(0, Math.min(4, all.size()));
+        } else {
+            recommendSubLabel.setText("  Based on your order history");
+
+            // Collect categories the customer has ordered
+            Set<String> likedCategories = new LinkedHashSet<>();
+            Set<Integer> orderedRestaurantIDs = new LinkedHashSet<>();
+            for (Order o : history) {
+                orderedRestaurantIDs.add(o.getRestaurantID());
+                for (OrderItem oi : o.getItems()) {
+                    // Try to find this item's category from the menu
+                    for (Restaurant r : allRests) {
+                        try {
+                            for (MenuItem mi : menuItemDAO.getAvailable(r.getRestaurantID())) {
+                                if (mi.getName().equalsIgnoreCase(oi.getItemName()))
+                                    likedCategories.add(mi.getCategory());
+                            }
+                        } catch (SQLException ignored) {}
+                    }
+                }
+            }
+
+            // Find items in liked categories from DIFFERENT restaurants, or same rest different items
+            Set<String> alreadyOrdered = new LinkedHashSet<>();
+            for (Order o : history)
+                for (OrderItem oi : o.getItems())
+                    alreadyOrdered.add(oi.getItemName().toLowerCase());
+
+            for (Restaurant r : allRests) {
+                for (MenuItem mi : menuItemDAO.getAvailable(r.getRestaurantID())) {
+                    if (alreadyOrdered.contains(mi.getName().toLowerCase())) continue;
+                    boolean sameCategory = likedCategories.isEmpty()
+                            || likedCategories.contains(mi.getCategory());
+                    boolean diffRest = !orderedRestaurantIDs.contains(r.getRestaurantID());
+                    if (sameCategory && (diffRest || likedCategories.contains(mi.getCategory())))
+                        candidates.add(mi);
+                }
+            }
+
+            // shuffle and cap at 4; if still empty fall back to random
+            Collections.shuffle(candidates, new Random());
+            if (candidates.isEmpty()) {
+                List<MenuItem> all = menuItemDAO.getAllMenuItems();
+                Collections.shuffle(all, new Random());
+                candidates = all.subList(0, Math.min(4, all.size()));
+            } else {
+                candidates = candidates.subList(0, Math.min(4, candidates.size()));
+            }
+        }
+
+        for (MenuItem mi : candidates) {
+            // Find restaurant name for this item
+            String restName = "";
+            for (Restaurant r : allRests)
+                if (r.getRestaurantID() == mi.getRestaurantID()) {
+                    restName = r.getRestaurantName();
+                    break;
+                }
+            recommendationsBox.getChildren().add(
+                    makeFoodCard(mi.getName(),
+                            "NPR " + String.format("%.0f", mi.getPrice()),
+                            restName));
+        }
+    }
+
+    /** Rectangular restaurant card */
+    private VBox makeRestCard(Restaurant r) {
+        VBox card = new VBox(8);
+        card.setPrefWidth(180);
+        card.setMinWidth(160);
+        card.setMaxWidth(220);
+        card.setStyle(
+                "-fx-background-color: white;"
+                + "-fx-background-radius: 14;"
+                + "-fx-border-color: #e2e8f0;"
+                + "-fx-border-radius: 14;"
+                + "-fx-border-width: 1;"
+                + "-fx-padding: 0 0 14 0;"
+                + "-fx-cursor: hand;");
+
+        // Colored banner instead of image
+        Region banner = new Region();
+        banner.setPrefHeight(90);
+        banner.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #FF6B35, #f97316);"
+                + "-fx-background-radius: 14 14 0 0;");
+
+        Label name = new Label(r.getRestaurantName());
+        name.setWrapText(true);
+        name.setStyle(
+                "-fx-font-size: 13px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #F97316;"
+                + "-fx-padding: 10 12 2 12;");
+
+        Label cuisine = new Label(r.getCuisineType() != null ? r.getCuisineType() : "");
+        cuisine.setStyle(
+                "-fx-font-size: 11px;"
+                + "-fx-text-fill: #64748B;"
+                + "-fx-padding: 0 12 0 12;");
+
+        card.getChildren().addAll(banner, name, cuisine);
+        return card;
+    }
+
+    /** Rectangular food/item card */
+    private VBox makeFoodCard(String itemName, String price, String subtitle) {
+        VBox card = new VBox(8);
+        card.setPrefWidth(180);
+        card.setMinWidth(160);
+        card.setMaxWidth(220);
+        card.setStyle(
+                "-fx-background-color: white;"
+                + "-fx-background-radius: 14;"
+                + "-fx-border-color: #e2e8f0;"
+                + "-fx-border-radius: 14;"
+                + "-fx-border-width: 1;"
+                + "-fx-padding: 0 0 14 0;"
+                + "-fx-cursor: hand;");
+
+        // Colored banner
+        Region banner = new Region();
+        banner.setPrefHeight(90);
+        banner.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #22c55e, #16a34a);"
+                + "-fx-background-radius: 14 14 0 0;");
+
+        Label name = new Label(itemName);
+        name.setWrapText(true);
+        name.setStyle(
+                "-fx-font-size: 13px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #F97316;"
+                + "-fx-padding: 10 12 2 12;");
+
+        if (!price.isEmpty()) {
+            Label priceLabel = new Label(price);
+            priceLabel.setStyle(
+                    "-fx-font-size: 12px;"
+                    + "-fx-font-weight: bold;"
+                    + "-fx-text-fill: #16a34a;"
+                    + "-fx-padding: 0 12 0 12;");
+            card.getChildren().addAll(banner, name, priceLabel);
+        } else {
+            card.getChildren().addAll(banner, name);
+        }
+
+        if (!subtitle.isEmpty()) {
+            Label sub = new Label(subtitle);
+            sub.setStyle(
+                    "-fx-font-size: 11px;"
+                    + "-fx-text-fill: #64748B;"
+                    + "-fx-padding: 0 12 0 12;");
+            card.getChildren().add(sub);
+        }
+
+        return card;
     }
 
     private void loadRestaurants() {
@@ -258,29 +464,11 @@ public class CustomerDashboardController {
         menuTitleLabel.setText(selectedRest.getRestaurantName() + " - Menu");
 
         try {
-            List<MenuItem> raw = menuItemDAO.getAvailable(selectedRest.getRestaurantID());
-
-            // Sort: Starter → Dessert → Main → Drink, then alpha within each
-            List<String> catOrder = java.util.Arrays.asList("Starter", "Dessert", "Main", "Drink");
-            raw.sort((a, b) -> {
-                int ai = catOrder.indexOf(a.getCategory()) < 0 ? 50 : catOrder.indexOf(a.getCategory());
-                int bi = catOrder.indexOf(b.getCategory()) < 0 ? 50 : catOrder.indexOf(b.getCategory());
-                if (ai != bi) return ai - bi;
-                return a.getName().compareToIgnoreCase(b.getName());
-            });
-
-            currentMenu = new ArrayList<>();
+            currentMenu = menuItemDAO.getAvailable(selectedRest.getRestaurantID());
             List<String> display = new ArrayList<>();
-            String lastCat = "";
-            for (MenuItem item : raw) {
-                String cat = item.getCategory() == null ? "Other" : item.getCategory();
-                if (!cat.equalsIgnoreCase(lastCat)) {
-                    display.add("── " + cat.toUpperCase() + " ──");
-                    currentMenu.add(null); // header placeholder
-                    lastCat = cat;
-                }
-                currentMenu.add(item);
-                display.add("    " + item.getName()
+            for (MenuItem item : currentMenu) {
+                display.add(item.getName()
+                        + " | " + item.getCategory()
                         + " | NPR " + String.format("%.0f", item.getPrice()));
             }
             menuListView.setItems(FXCollections.observableArrayList(display));
@@ -299,11 +487,6 @@ public class CustomerDashboardController {
         }
 
         MenuItem item = currentMenu.get(idx);
-        if (item == null) { // clicked a category header
-            menuListView.getSelectionModel().clearSelection();
-            browseStatus.setText("Select a menu item, not a category header.");
-            return;
-        }
         for (OrderItem existing : cart) {
             if (existing.getMenuItemID() == item.getItemID()) {
                 existing.setQuantity(existing.getQuantity() + 1);
