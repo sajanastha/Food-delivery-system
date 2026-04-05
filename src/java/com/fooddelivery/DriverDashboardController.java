@@ -127,6 +127,16 @@ public class DriverDashboardController {
 
     private void loadRequests() {
         try {
+            // If driver already has an active delivery, show no new requests
+            List<Order> active = orderDAO.getByDriverAndStatus(
+                    me.getUserID(), OrderStatus.IN_DELIVERY);
+            if (!active.isEmpty() || !me.isAvailable()) {
+                requestListView.setItems(FXCollections.observableArrayList());
+                requestStatus.setText("You have an active delivery in progress.");
+                summaryLabel.setText("0 request(s) waiting");
+                return;
+            }
+
             List<Order> all = orderDAO.getAvailableForDrivers();
             availableRequests = new ArrayList<>();
             for (Order o : all)
@@ -142,6 +152,8 @@ public class DriverDashboardController {
             requestListView.setItems(
                 FXCollections.observableArrayList(display));
 
+            requestStatus.setText(availableRequests.isEmpty()
+                    ? "No new requests right now." : "");
             summaryLabel.setText(
                 availableRequests.size() + " request(s) waiting");
         } catch (SQLException ex) {
@@ -230,6 +242,7 @@ public class DriverDashboardController {
             orderDAO.assignDriver(o.getOrderID(),
                     me.getUserID());
             me.acceptOrder(o.getOrderID());
+            updateAvailabilityLabel();
             requestStatus.setText(
                 "✔ Accepted Order #" + o.getOrderID());
             showAlert("Order Accepted",

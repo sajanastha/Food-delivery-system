@@ -14,7 +14,7 @@ public class OrderDAO {
         try {
             String sql = "INSERT INTO orders (customerID," +
                     "restaurantID,deliveryFee,deliveryAddress," +
-                    "status,orderTime) VALUES (?,?,?,?,?,?)";
+                    "status,orderTime,driverID) VALUES (?,?,?,?,?,?,?)";
             int newID;
             try (PreparedStatement ps = conn.prepareStatement(
                     sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -22,8 +22,9 @@ public class OrderDAO {
                 ps.setInt(2, order.getRestaurantID());
                 ps.setDouble(3, order.getDeliveryFee());
                 ps.setString(4, order.getDeliveryAddress());
-                ps.setString(5, "PENDING");
+                ps.setString(5, "CONFIRMED");
                 ps.setString(6, LocalDateTime.now().toString());
+                ps.setInt(7, 0);
                 ps.executeUpdate();
                 newID = ps.getGeneratedKeys().getInt(1);
             }
@@ -100,7 +101,7 @@ public class OrderDAO {
             throws SQLException {
         List<Order> list = new ArrayList<>();
         String sql = "SELECT * FROM orders " +
-                "WHERE status='CONFIRMED' AND driverID=0 " +
+                "WHERE status='CONFIRMED' AND (driverID IS NULL OR driverID=0) " +
                 "ORDER BY orderTime DESC";
         try (Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
