@@ -12,6 +12,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
@@ -22,357 +23,340 @@ import java.util.Set;
 
 public class DriverDashboardController {
 
-    @FXML private Label welcomeLabel;
-    @FXML private Label availabilityLabel;
+    @FXML private Label    welcomeLabel;
+    @FXML private Label    availabilityLabel;
     @FXML private CheckBox availabilityToggle;
-    @FXML private Label summaryLabel;
+    @FXML private Label    summaryLabel;
 
     @FXML private ListView<String> requestListView;
-    @FXML private TextArea requestDetailArea;
-    @FXML private Label requestStatus;
+    @FXML private TextArea         requestDetailArea;
+    @FXML private Label            requestStatus;
 
     @FXML private ListView<String> activeDeliveryListView;
-    @FXML private TextArea activeDetailArea;
-    @FXML private Label activeStatus;
+    @FXML private TextArea         activeDetailArea;
+    @FXML private Label            activeStatus;
 
     @FXML private ListView<String> historyListView;
-    @FXML private TextArea historyDetailArea;
-    @FXML private Label historyStatus;
+    @FXML private TextArea         historyDetailArea;
+    @FXML private Label            historyStatus;
 
     @FXML private TextArea profileArea;
 
-    private final OrderDAO orderDAO = new OrderDAO();
+    // Panels for bottom nav switching
+    @FXML private VBox requestsPanel;
+    @FXML private VBox activePanel;
+    @FXML private VBox driverHistoryPanel;
+    @FXML private VBox driverProfilePanel;
+
+    private final OrderDAO      orderDAO      = new OrderDAO();
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
 
-    private Driver me;
-    private List<Order> availableRequests = new ArrayList<>();
-    private List<Order> activeDeliveries = new ArrayList<>();
-    private List<Order> completedDeliveries = new ArrayList<>();
+    private Driver       me;
+    private List<Order>  availableRequests  = new ArrayList<>();
+    private List<Order>  activeDeliveries   = new ArrayList<>();
+    private List<Order>  completedDeliveries= new ArrayList<>();
     private final Set<Integer> skippedRequestIds = new HashSet<>();
 
     @FXML
     public void initialize() {
         me = (Driver) SessionManager.getInstance().getCurrentUser();
-        welcomeLabel.setText("Driver Dashboard - " + me.getFullName());
+        welcomeLabel.setText("Driver: " + me.getFullName());
         availabilityToggle.setSelected(me.isAvailable());
         updateAvailabilityLabel();
         refreshAll();
         loadProfile();
+        showPanel("requests");
     }
 
+    // ── Bottom nav panel switching ────────────────────────────────────────────
+    private void showPanel(String name) {
+        requestsPanel.setVisible(false);
+        requestsPanel.setManaged(false);
+        activePanel.setVisible(false);
+        activePanel.setManaged(false);
+        driverHistoryPanel.setVisible(false);
+        driverHistoryPanel.setManaged(false);
+        driverProfilePanel.setVisible(false);
+        driverProfilePanel.setManaged(false);
+
+        switch (name) {
+            case "requests" -> {
+                requestsPanel.setVisible(true);
+                requestsPanel.setManaged(true);
+            }
+            case "active" -> {
+                activePanel.setVisible(true);
+                activePanel.setManaged(true);
+            }
+            case "history" -> {
+                driverHistoryPanel.setVisible(true);
+                driverHistoryPanel.setManaged(true);
+            }
+            case "profile" -> {
+                driverProfilePanel.setVisible(true);
+                driverProfilePanel.setManaged(true);
+            }
+        }
+    }
+
+    @FXML public void goRequests(ActionEvent e) { showPanel("requests"); }
+    @FXML public void goActive(ActionEvent e)   { showPanel("active"); }
+    @FXML public void goHistory(ActionEvent e)  { showPanel("history"); }
+    @FXML public void goProfile(ActionEvent e)  { showPanel("profile"); }
+
+    // ── Availability ──────────────────────────────────────────────────────────
     @FXML
-    private void handleAvailabilityChanged(ActionEvent event) {
+    private void handleAvailabilityChanged(ActionEvent e) {
         me.setAvailable(availabilityToggle.isSelected());
         updateAvailabilityLabel();
-        refreshRequests();
-        requestStatus.setText(me.isAvailable()
-                ? "You are available for delivery requests."
-                : "You are offline. New requests are hidden.");
+        loadRequests();
     }
 
-    @FXML
-    private void handleRefresh(ActionEvent event) {
-        refreshAll();
-        requestStatus.setText("Driver data refreshed.");
+    private void updateAvailabilityLabel() {
+        availabilityLabel.setText(
+            me.isAvailable() ? "🟢 Available" : "🔴 Busy");
     }
 
-    @FXML
-    private void handleRequestSelected() {
-        int idx = requestListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= availableRequests.size()) {
-            requestDetailArea.clear();
-            return;
-        }
-        requestDetailArea.setText(buildOrderDetails(availableRequests.get(idx)));
-    }
-
-    @FXML
-    private void handleAcceptRequest(ActionEvent event) {
-        int idx = requestListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= availableRequests.size()) {
-            requestStatus.setText("Select a delivery request first.");
-            return;
-        }
-        if (!me.isAvailable()) {
-            requestStatus.setText("Turn availability on before accepting a delivery.");
-            return;
-        }
-
-        Order order = availableRequests.get(idx);
-        try {
-            orderDAO.assignDriver(order.getOrderID(), me.getUserID());
-            me.acceptOrder(order.getOrderID());
-            activeStatus.setText("Accepted order #" + order.getOrderID() + ".");
-            requestStatus.setText("Delivery request accepted.");
-            refreshAll();
-        } catch (SQLException e) {
-            requestStatus.setText("Could not accept the delivery.");
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleRejectRequest(ActionEvent event) {
-        int idx = requestListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= availableRequests.size()) {
-            requestStatus.setText("Select a delivery request first.");
-            return;
-        }
-
-        Order order = availableRequests.get(idx);
-        skippedRequestIds.add(order.getOrderID());
-        requestStatus.setText("Skipped order #" + order.getOrderID() + " for now.");
-        refreshRequests();
-    }
-
-    @FXML
-    private void handleActiveSelected() {
-        int idx = activeDeliveryListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= activeDeliveries.size()) {
-            activeDetailArea.clear();
-            return;
-        }
-        activeDetailArea.setText(buildOrderDetails(activeDeliveries.get(idx)));
-    }
-
-    @FXML
-    private void handleMarkDelivered(ActionEvent event) {
-        int idx = activeDeliveryListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= activeDeliveries.size()) {
-            activeStatus.setText("Select an active delivery first.");
-            return;
-        }
-
-        Order order = activeDeliveries.get(idx);
-        try {
-            orderDAO.updateStatus(order.getOrderID(), OrderStatus.DELIVERED);
-            if (me.getCurrentOrderID() == order.getOrderID()) {
-                me.completeDelivery();
-                availabilityToggle.setSelected(me.isAvailable());
-                updateAvailabilityLabel();
-            }
-            activeStatus.setText("Order #" + order.getOrderID() + " marked as delivered.");
-            refreshAll();
-        } catch (SQLException e) {
-            activeStatus.setText("Could not update delivery status.");
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleCancelDelivery(ActionEvent event) {
-        int idx = activeDeliveryListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= activeDeliveries.size()) {
-            activeStatus.setText("Select an active delivery first.");
-            return;
-        }
-
-        Order order = activeDeliveries.get(idx);
-        try {
-            orderDAO.updateStatus(order.getOrderID(), OrderStatus.CANCELLED);
-            if (me.getCurrentOrderID() == order.getOrderID()) {
-                me.completeDelivery();
-                availabilityToggle.setSelected(me.isAvailable());
-                updateAvailabilityLabel();
-            }
-            activeStatus.setText("Order #" + order.getOrderID() + " cancelled.");
-            refreshAll();
-        } catch (SQLException e) {
-            activeStatus.setText("Could not cancel the delivery.");
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleHistorySelected() {
-        int idx = historyListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= completedDeliveries.size()) {
-            historyDetailArea.clear();
-            return;
-        }
-        historyDetailArea.setText(buildOrderDetails(completedDeliveries.get(idx)));
-    }
-
-    @FXML
-    private void handleLogout(ActionEvent event) {
-        SessionManager.getInstance().logout();
-        loadScreen(event, "/com/fooddelivery/views/LogIn.fxml", "Login");
-    }
-
+    // ── Load data ─────────────────────────────────────────────────────────────
     private void refreshAll() {
-        refreshRequests();
-        refreshActiveDeliveries();
-        refreshHistory();
-        loadProfile();
-        summaryLabel.setText(buildSummary());
+        loadRequests();
+        loadActiveDeliveries();
+        loadHistory();
+        updateSummary();
     }
 
-    private void refreshRequests() {
+    private void loadRequests() {
         try {
+            List<Order> all = orderDAO.getAvailableForDrivers();
             availableRequests = new ArrayList<>();
-            if (me.isAvailable()) {
-                for (Order order : orderDAO.getAvailableForDrivers()) {
-                    if (!skippedRequestIds.contains(order.getOrderID())) {
-                        availableRequests.add(order);
-                    }
-                }
-            }
+            for (Order o : all)
+                if (!skippedRequestIds.contains(o.getOrderID()))
+                    availableRequests.add(o);
 
             List<String> display = new ArrayList<>();
-            for (Order order : availableRequests) {
-                display.add("Order #" + order.getOrderID()
-                        + "  " + getRestaurantName(order.getRestaurantID())
-                        + "  NPR " + String.format("%.2f", order.getTotalAmount()));
-            }
+            for (Order o : availableRequests)
+                display.add("Order #" + o.getOrderID()
+                    + "  →  " + o.getDeliveryAddress()
+                    + "  |  NPR "
+                    + String.format("%.2f", o.getTotalAmount()));
+            requestListView.setItems(
+                FXCollections.observableArrayList(display));
 
-            requestListView.setItems(FXCollections.observableArrayList(display));
-            if (availableRequests.isEmpty()) {
-                requestDetailArea.setText(me.isAvailable()
-                        ? "No open delivery requests right now."
-                        : "Set yourself as available to receive delivery requests.");
-            } else {
-                requestDetailArea.clear();
-            }
-        } catch (SQLException e) {
-            requestStatus.setText("Could not load delivery requests.");
+            summaryLabel.setText(
+                availableRequests.size() + " request(s) waiting");
+        } catch (SQLException ex) {
+            requestStatus.setText("Error loading requests.");
         }
     }
 
-    private void refreshActiveDeliveries() {
+    private void loadActiveDeliveries() {
         try {
-            activeDeliveries = orderDAO.getByDriverAndStatus(
+            List<Order> all = orderDAO.getByDriverAndStatus(
                     me.getUserID(), OrderStatus.IN_DELIVERY);
+            activeDeliveries = all;
 
             List<String> display = new ArrayList<>();
-            for (Order order : activeDeliveries) {
-                display.add("Order #" + order.getOrderID()
-                        + "  ->  " + order.getDeliveryAddress());
-            }
-
-            activeDeliveryListView.setItems(FXCollections.observableArrayList(display));
-            if (activeDeliveries.isEmpty()) {
-                activeDetailArea.setText("No ongoing deliveries.");
-                if (me.getCurrentOrderID() != 0) {
-                    me.setCurrentOrderID(0);
-                    me.setAvailable(true);
-                    availabilityToggle.setSelected(true);
-                    updateAvailabilityLabel();
-                }
-            } else {
-                me.setCurrentOrderID(activeDeliveries.get(0).getOrderID());
-                me.setAvailable(false);
-                availabilityToggle.setSelected(false);
-                updateAvailabilityLabel();
-            }
-        } catch (SQLException e) {
-            activeStatus.setText("Could not load active deliveries.");
+            for (Order o : all)
+                display.add("Order #" + o.getOrderID()
+                    + "  →  " + o.getDeliveryAddress());
+            activeDeliveryListView.setItems(
+                FXCollections.observableArrayList(display));
+        } catch (SQLException ex) {
+            activeStatus.setText("Error loading active deliveries.");
         }
     }
 
-    private void refreshHistory() {
+    private void loadHistory() {
         try {
-            completedDeliveries = orderDAO.getByDriver(me.getUserID());
-            completedDeliveries.removeIf(order ->
-                    order.getStatus() == OrderStatus.IN_DELIVERY);
+            List<Order> delivered = orderDAO.getByDriverAndStatus(
+                    me.getUserID(), OrderStatus.DELIVERED);
+            List<Order> cancelled = orderDAO.getByDriverAndStatus(
+                    me.getUserID(), OrderStatus.CANCELLED);
+            completedDeliveries = new ArrayList<>();
+            completedDeliveries.addAll(delivered);
+            completedDeliveries.addAll(cancelled);
 
             List<String> display = new ArrayList<>();
-            for (Order order : completedDeliveries) {
-                display.add("Order #" + order.getOrderID()
-                        + "  " + order.getStatus()
-                        + "  NPR " + String.format("%.2f", order.getTotalAmount()));
-            }
-
-            historyListView.setItems(FXCollections.observableArrayList(display));
-            historyStatus.setText(completedDeliveries.size()
-                    + " past delivery record(s)");
-            if (completedDeliveries.isEmpty()) {
-                historyDetailArea.setText("Your completed or cancelled deliveries will appear here.");
-            }
-        } catch (SQLException e) {
-            historyStatus.setText("Could not load delivery history.");
+            for (Order o : completedDeliveries)
+                display.add("Order #" + o.getOrderID()
+                    + "  [" + o.getStatus() + "]"
+                    + "  →  " + o.getDeliveryAddress());
+            historyListView.setItems(
+                FXCollections.observableArrayList(display));
+        } catch (SQLException ex) {
+            historyStatus.setText("Error loading history.");
         }
+    }
+
+    private void updateSummary() {
+        summaryLabel.setText(
+            availableRequests.size() + " available  ·  "
+            + activeDeliveries.size() + " active");
     }
 
     private void loadProfile() {
         profileArea.setText(
-                "Name: " + me.getFullName() + "\n"
-                        + "Email: " + me.getEmail() + "\n"
-                        + "Phone: " + safe(me.getPhone()) + "\n"
-                        + "Availability: " + (me.isAvailable() ? "Available" : "Busy") + "\n"
-                        + "Current Order ID: "
-                        + (me.getCurrentOrderID() == 0 ? "None" : me.getCurrentOrderID())
-        );
+            "Name:          " + me.getFullName() + "\n"
+            + "Email:         " + me.getEmail() + "\n"
+            + "Phone:         "
+            + (me.getPhone() == null || me.getPhone().isEmpty()
+                ? "Not provided" : me.getPhone()) + "\n"
+            + "Licence:       " + me.getLicenseNumber() + "\n"
+            + "Vehicle:       " + me.getVehicleType() + "\n"
+            + "Status:        "
+            + (me.isAvailable() ? "Available" : "On Delivery"));
     }
 
-    private void updateAvailabilityLabel() {
-        availabilityLabel.setText(me.isAvailable()
-                ? "Available for requests"
-                : "Busy with delivery");
+    // ── Request actions ───────────────────────────────────────────────────────
+    @FXML
+    private void handleRequestSelected() {
+        int idx = requestListView.getSelectionModel()
+                                  .getSelectedIndex();
+        if (idx < 0 || idx >= availableRequests.size()) return;
+        Order o = availableRequests.get(idx);
+        requestDetailArea.setText(o.getOrderSummary());
     }
 
-    private String buildSummary() {
-        return availableRequests.size() + " open requests   |   "
-                + activeDeliveries.size() + " active deliveries   |   "
-                + completedDeliveries.size() + " delivery history";
-    }
-
-    private String buildOrderDetails(Order order) {
-        StringBuilder items = new StringBuilder();
-        for (OrderItem item : order.getItems()) {
-            if (items.length() > 0) {
-                items.append("\n");
-            }
-            items.append("- ")
-                    .append(item.getItemName())
-                    .append(" x")
-                    .append(item.getQuantity())
-                    .append("  (NPR ")
-                    .append(String.format("%.2f", item.getSubtotal()))
-                    .append(")");
+    @FXML
+    private void handleAcceptRequest(ActionEvent e) {
+        int idx = requestListView.getSelectionModel()
+                                  .getSelectedIndex();
+        if (idx < 0) {
+            requestStatus.setText("Select a request first.");
+            return;
         }
-
-        return "Order ID: " + order.getOrderID() + "\n"
-                + "Restaurant: " + getRestaurantName(order.getRestaurantID()) + "\n"
-                + "Customer ID: " + order.getCustomerID() + "\n"
-                + "Driver ID: " + order.getDriverID() + "\n"
-                + "Status: " + order.getStatus() + "\n"
-                + "Delivery Address: " + order.getDeliveryAddress() + "\n"
-                + "Delivery Fee: NPR " + String.format("%.2f", order.getDeliveryFee()) + "\n"
-                + "Total: NPR " + String.format("%.2f", order.getTotalAmount()) + "\n"
-                + "Items:\n" + (items.isEmpty() ? "- No items found" : items);
-    }
-
-    private String getRestaurantName(int restaurantID) {
+        Order o = availableRequests.get(idx);
         try {
-            Restaurant restaurant = restaurantDAO.getById(restaurantID);
-            if (restaurant != null) {
-                return restaurant.getRestaurantName();
-            }
-        } catch (SQLException ignored) {
+            orderDAO.assignDriver(o.getOrderID(),
+                    me.getUserID());
+            me.acceptOrder(o.getOrderID());
+            requestStatus.setText(
+                "✔ Accepted Order #" + o.getOrderID());
+            showAlert("Order Accepted",
+                "You accepted Order #" + o.getOrderID()
+                + "\nDeliver to: " + o.getDeliveryAddress());
+            refreshAll();
+            showPanel("active");
+        } catch (SQLException ex) {
+            requestStatus.setText("Error accepting order.");
         }
-        return "Restaurant #" + restaurantID;
     }
 
-    private String safe(String value) {
-        return value == null || value.isBlank() ? "-" : value;
+    @FXML
+    private void handleRejectRequest(ActionEvent e) {
+        int idx = requestListView.getSelectionModel()
+                                  .getSelectedIndex();
+        if (idx < 0) {
+            requestStatus.setText("Select a request first.");
+            return;
+        }
+        skippedRequestIds.add(
+            availableRequests.get(idx).getOrderID());
+        loadRequests();
+        requestDetailArea.clear();
+        requestStatus.setText("Skipped.");
     }
 
-    private void loadScreen(ActionEvent event, String path, String title) {
+    // ── Active delivery actions ───────────────────────────────────────────────
+    @FXML
+    private void handleActiveSelected() {
+        int idx = activeDeliveryListView.getSelectionModel()
+                                         .getSelectedIndex();
+        if (idx < 0 || idx >= activeDeliveries.size()) return;
+        activeDetailArea.setText(
+            activeDeliveries.get(idx).getOrderSummary());
+    }
+
+    @FXML
+    private void handleMarkDelivered(ActionEvent e) {
+        int idx = activeDeliveryListView.getSelectionModel()
+                                         .getSelectedIndex();
+        if (idx < 0) {
+            activeStatus.setText("Select a delivery first.");
+            return;
+        }
+        Order o = activeDeliveries.get(idx);
         try {
-            Parent root = FXMLLoader.load(getClass().getResource(path));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setTitle("Food Delivery - " + title);
-            stage.setMaximized(false);
-            stage.setScene(new Scene(root, 480, 520));
-            stage.setResizable(false);
+            orderDAO.updateStatus(o.getOrderID(),
+                    OrderStatus.DELIVERED);
+            me.completeDelivery();
+            activeStatus.setText(
+                "✔ Order #" + o.getOrderID() + " delivered!");
+            showAlert("Delivered!",
+                "Order #" + o.getOrderID()
+                + " marked as delivered.\nGreat work!");
+            refreshAll();
+            showPanel("history");
+        } catch (SQLException ex) {
+            activeStatus.setText("Error updating status.");
+        }
+    }
+
+    @FXML
+    private void handleCancelDelivery(ActionEvent e) {
+        int idx = activeDeliveryListView.getSelectionModel()
+                                         .getSelectedIndex();
+        if (idx < 0) {
+            activeStatus.setText("Select a delivery first.");
+            return;
+        }
+        Order o = activeDeliveries.get(idx);
+        try {
+            orderDAO.updateStatus(o.getOrderID(),
+                    OrderStatus.CANCELLED);
+            me.completeDelivery();
+            activeStatus.setText(
+                "Order #" + o.getOrderID() + " cancelled.");
+            refreshAll();
+        } catch (SQLException ex) {
+            activeStatus.setText("Error cancelling.");
+        }
+    }
+
+    // ── History ───────────────────────────────────────────────────────────────
+    @FXML
+    private void handleHistorySelected() {
+        int idx = historyListView.getSelectionModel()
+                                  .getSelectedIndex();
+        if (idx < 0 || idx >= completedDeliveries.size()) return;
+        historyDetailArea.setText(
+            completedDeliveries.get(idx).getOrderSummary());
+    }
+
+    // ── Refresh ───────────────────────────────────────────────────────────────
+    @FXML
+    private void handleRefresh(ActionEvent e) {
+        refreshAll();
+    }
+
+    // ── Logout ────────────────────────────────────────────────────────────────
+    @FXML
+    private void handleLogout(ActionEvent e) {
+        SessionManager.getInstance().logout();
+        loadScreen(e,
+            "/com/fooddelivery/views/Login.fxml", "Login");
+    }
+
+    private void showAlert(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    private void loadScreen(ActionEvent e,
+                             String path, String title) {
+        try {
+            Parent root = FXMLLoader.load(
+                getClass().getResource(path));
+            Stage stage = (Stage) ((Node) e.getSource())
+                              .getScene().getWindow();
+            stage.setTitle("Food Delivery — " + title);
+            stage.setScene(new Scene(root));
             stage.show();
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Navigation Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Could not open " + title + ".");
-            alert.showAndWait();
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }

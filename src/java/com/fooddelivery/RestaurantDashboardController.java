@@ -17,8 +17,31 @@ import java.util.List;
 
 public class RestaurantDashboardController {
 
+    private static final String ACTIVE_TAB_STYLE =
+            "-fx-background-color: transparent;"
+                    + "-fx-text-fill: #4F46E5;"
+                    + "-fx-font-size: 13px;"
+                    + "-fx-font-weight: bold;"
+                    + "-fx-padding: 10 18;"
+                    + "-fx-cursor: hand;"
+                    + "-fx-border-color: transparent transparent #4F46E5 transparent;"
+                    + "-fx-border-width: 0 0 2 0;";
+
+    private static final String INACTIVE_TAB_STYLE =
+            "-fx-background-color: transparent;"
+                    + "-fx-text-fill: #64748B;"
+                    + "-fx-font-size: 13px;"
+                    + "-fx-padding: 10 18;"
+                    + "-fx-cursor: hand;"
+                    + "-fx-border-color: transparent transparent transparent transparent;"
+                    + "-fx-border-width: 0 0 2 0;";
+
     @FXML private Label welcomeLabel;
     @FXML private Label menuStatus;
+    @FXML private Button menuTabButton;
+    @FXML private Button ordersTabButton;
+    @FXML private Button reportsTabButton;
+    @FXML private Button feedbackTabButton;
 
     // Menu panel
     @FXML private ListView<String> menuListView;
@@ -77,14 +100,34 @@ public class RestaurantDashboardController {
     // ── Panel switching ───────────────────────────────────────────
     private void showPanel(String name) {
         menuPanel.setVisible(false);
+        menuPanel.setManaged(false);
         ordersPanel.setVisible(false);
+        ordersPanel.setManaged(false);
         reportsPanel.setVisible(false);
+        reportsPanel.setManaged(false);
         feedbackPanel.setVisible(false);
+        feedbackPanel.setManaged(false);
         switch (name) {
-            case "menu"     -> menuPanel.setVisible(true);
-            case "orders"   -> ordersPanel.setVisible(true);
-            case "reports"  -> reportsPanel.setVisible(true);
-            case "feedback" -> feedbackPanel.setVisible(true);
+            case "menu" -> {
+                menuPanel.setVisible(true);
+                menuPanel.setManaged(true);
+                setActiveTab(menuTabButton);
+            }
+            case "orders" -> {
+                ordersPanel.setVisible(true);
+                ordersPanel.setManaged(true);
+                setActiveTab(ordersTabButton);
+            }
+            case "reports" -> {
+                reportsPanel.setVisible(true);
+                reportsPanel.setManaged(true);
+                setActiveTab(reportsTabButton);
+            }
+            case "feedback" -> {
+                feedbackPanel.setVisible(true);
+                feedbackPanel.setManaged(true);
+                setActiveTab(feedbackTabButton);
+            }
         }
     }
 
@@ -264,6 +307,14 @@ public class RestaurantDashboardController {
         itemPriceField.clear();
         itemCategoryField.clear();
         itemDescField.clear();
+    }
+
+    private void setActiveTab(Button activeTab) {
+        menuTabButton.setStyle(INACTIVE_TAB_STYLE);
+        ordersTabButton.setStyle(INACTIVE_TAB_STYLE);
+        reportsTabButton.setStyle(INACTIVE_TAB_STYLE);
+        feedbackTabButton.setStyle(INACTIVE_TAB_STYLE);
+        activeTab.setStyle(ACTIVE_TAB_STYLE);
     }
 
     // ── Orders ───────────────────────────────────────────────────
