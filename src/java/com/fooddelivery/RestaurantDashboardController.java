@@ -42,7 +42,6 @@ public class RestaurantDashboardController {
     @FXML private Button ordersTabButton;
     @FXML private Button reportsTabButton;
     @FXML private Button feedbackTabButton;
-    @FXML private Button profileTabButton;
 
     // Menu panel
     @FXML private ListView<String> menuListView;
@@ -67,11 +66,6 @@ public class RestaurantDashboardController {
     @FXML private VBox ordersPanel;
     @FXML private VBox reportsPanel;
     @FXML private VBox feedbackPanel;
-    @FXML private VBox profilePanel;
-    @FXML private Label profileNameLabel;
-    @FXML private Label profileEmailLabel;
-    @FXML private Label profilePhoneLabel;
-    @FXML private Label profileRoleLabel;
 
     private final MenuItemDAO   menuItemDAO   = new MenuItemDAO();
     private final OrderDAO      orderDAO      = new OrderDAO();
@@ -100,16 +94,7 @@ public class RestaurantDashboardController {
         } catch (SQLException e) {
             menuStatus.setText("Error loading data.");
         }
-        setProfileInfo(owner);
         showPanel("menu");
-    }
-
-    private void setProfileInfo(Restaurant owner) {
-        profileNameLabel.setText("Name: " + owner.getFullName());
-        profileEmailLabel.setText("Email: " + owner.getEmail());
-        profilePhoneLabel.setText("Phone: " + (owner.getPhone() == null || owner.getPhone().isBlank()
-                ? "Not provided" : owner.getPhone()));
-        profileRoleLabel.setText("Role: Restaurant Owner");
     }
 
     // ── Panel switching ───────────────────────────────────────────
@@ -143,11 +128,6 @@ public class RestaurantDashboardController {
                 feedbackPanel.setManaged(true);
                 setActiveTab(feedbackTabButton);
             }
-            case "profile" -> {
-                profilePanel.setVisible(true);
-                profilePanel.setManaged(true);
-                setActiveTab(profileTabButton);
-            }
         }
     }
 
@@ -155,18 +135,45 @@ public class RestaurantDashboardController {
     @FXML private void goOrders(ActionEvent e)   { showPanel("orders"); loadOrdersSafe(); }
     @FXML private void goReports(ActionEvent e)  { showPanel("reports"); }
     @FXML private void goFeedback(ActionEvent e) { showPanel("feedback"); }
-    @FXML private void goProfile(ActionEvent e)  { showPanel("profile"); }
 
     // ── Menu ─────────────────────────────────────────────────────
+    private static final List<String> CATEGORY_ORDER =
+            java.util.Arrays.asList("Starter", "Dessert", "Main", "Drink");
+
+    private int categoryRank(String cat) {
+        if (cat == null) return 99;
+        for (int i = 0; i < CATEGORY_ORDER.size(); i++)
+            if (CATEGORY_ORDER.get(i).equalsIgnoreCase(cat)) return i;
+        return 50;
+    }
+
     private void loadMenu() throws SQLException {
-        menuItems = menuItemDAO.getByRestaurant(
+        List<MenuItem> raw = menuItemDAO.getByRestaurant(
                 myRestaurant.getRestaurantID());
+
+        // Sort by defined category order, then alphabetically within each
+        raw.sort((a, b) -> {
+            int ai = categoryRank(a.getCategory());
+            int bi = categoryRank(b.getCategory());
+            if (ai != bi) return ai - bi;
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+
+        menuItems = new ArrayList<>();
         List<String> display = new ArrayList<>();
-        for (MenuItem m : menuItems)
-            display.add("[" + m.getCategory() + "]  "
-                    + m.getName()
+        String lastCat = "";
+        for (MenuItem m : raw) {
+            String cat = m.getCategory() == null ? "Other" : m.getCategory();
+            if (!cat.equalsIgnoreCase(lastCat)) {
+                display.add("── " + cat.toUpperCase() + " ──");
+                menuItems.add(null); // header placeholder (keeps index in sync)
+                lastCat = cat;
+            }
+            menuItems.add(m);
+            display.add("    " + m.getName()
                     + "   NPR " + String.format("%.2f", m.getPrice())
-                    + (m.isAvailable() ? "  ✓" : "  ✗ unavailable"));
+                    + (m.isAvailable() ? "  \u2713" : "  \u2717 unavailable"));
+        }
         menuListView.setItems(
             FXCollections.observableArrayList(display));
     }
@@ -177,6 +184,10 @@ public class RestaurantDashboardController {
                               .getSelectedIndex();
         if (idx < 0 || idx >= menuItems.size()) return;
         MenuItem m = menuItems.get(idx);
+        if (m == null) { // clicked a category header row
+            menuListView.getSelectionModel().clearSelection();
+            return;
+        }
         itemNameField.setText(m.getName());
         itemPriceField.setText(String.valueOf(m.getPrice()));
         itemCategoryField.setText(m.getCategory());
@@ -248,7 +259,7 @@ public class RestaurantDashboardController {
     private void handleUpdateItem(ActionEvent e) {
         int idx = menuListView.getSelectionModel()
                               .getSelectedIndex();
-        if (idx < 0) {
+        if (idx < 0 || idx >= menuItems.size() || menuItems.get(idx) == null) {
             menuStatus.setText("Select an item to update.");
             return;
         }
@@ -267,7 +278,7 @@ public class RestaurantDashboardController {
     private void handleDeleteItem(ActionEvent e) {
         int idx = menuListView.getSelectionModel()
                               .getSelectedIndex();
-        if (idx < 0) {
+        if (idx < 0 || idx >= menuItems.size() || menuItems.get(idx) == null) {
             menuStatus.setText("Select an item to delete.");
             return;
         }
@@ -295,7 +306,7 @@ public class RestaurantDashboardController {
     private void handleToggle(ActionEvent e) {
         int idx = menuListView.getSelectionModel()
                               .getSelectedIndex();
-        if (idx < 0) {
+        if (idx < 0 || idx >= menuItems.size() || menuItems.get(idx) == null) {
             menuStatus.setText("Select an item first.");
             return;
         }
@@ -335,7 +346,6 @@ public class RestaurantDashboardController {
         ordersTabButton.setStyle(INACTIVE_TAB_STYLE);
         reportsTabButton.setStyle(INACTIVE_TAB_STYLE);
         feedbackTabButton.setStyle(INACTIVE_TAB_STYLE);
-        profileTabButton.setStyle(INACTIVE_TAB_STYLE);
         activeTab.setStyle(ACTIVE_TAB_STYLE);
     }
 

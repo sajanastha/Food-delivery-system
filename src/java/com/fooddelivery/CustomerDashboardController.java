@@ -258,11 +258,29 @@ public class CustomerDashboardController {
         menuTitleLabel.setText(selectedRest.getRestaurantName() + " - Menu");
 
         try {
-            currentMenu = menuItemDAO.getAvailable(selectedRest.getRestaurantID());
+            List<MenuItem> raw = menuItemDAO.getAvailable(selectedRest.getRestaurantID());
+
+            // Sort: Starter → Dessert → Main → Drink, then alpha within each
+            List<String> catOrder = java.util.Arrays.asList("Starter", "Dessert", "Main", "Drink");
+            raw.sort((a, b) -> {
+                int ai = catOrder.indexOf(a.getCategory()) < 0 ? 50 : catOrder.indexOf(a.getCategory());
+                int bi = catOrder.indexOf(b.getCategory()) < 0 ? 50 : catOrder.indexOf(b.getCategory());
+                if (ai != bi) return ai - bi;
+                return a.getName().compareToIgnoreCase(b.getName());
+            });
+
+            currentMenu = new ArrayList<>();
             List<String> display = new ArrayList<>();
-            for (MenuItem item : currentMenu) {
-                display.add(item.getName()
-                        + " | " + item.getCategory()
+            String lastCat = "";
+            for (MenuItem item : raw) {
+                String cat = item.getCategory() == null ? "Other" : item.getCategory();
+                if (!cat.equalsIgnoreCase(lastCat)) {
+                    display.add("── " + cat.toUpperCase() + " ──");
+                    currentMenu.add(null); // header placeholder
+                    lastCat = cat;
+                }
+                currentMenu.add(item);
+                display.add("    " + item.getName()
                         + " | NPR " + String.format("%.0f", item.getPrice()));
             }
             menuListView.setItems(FXCollections.observableArrayList(display));
@@ -281,6 +299,11 @@ public class CustomerDashboardController {
         }
 
         MenuItem item = currentMenu.get(idx);
+        if (item == null) { // clicked a category header
+            menuListView.getSelectionModel().clearSelection();
+            browseStatus.setText("Select a menu item, not a category header.");
+            return;
+        }
         for (OrderItem existing : cart) {
             if (existing.getMenuItemID() == item.getItemID()) {
                 existing.setQuantity(existing.getQuantity() + 1);
