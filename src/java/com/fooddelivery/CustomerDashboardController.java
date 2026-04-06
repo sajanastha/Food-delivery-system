@@ -61,6 +61,7 @@ public class CustomerDashboardController {
     @FXML private Button orderTabButton;
     @FXML private Button historyTabButton;
     @FXML private Button profileTabButton;
+    @FXML private Button feedbackTabButton;
 
     @FXML private VBox homePanel;
     @FXML private Label homeDateLabel;
@@ -91,6 +92,11 @@ public class CustomerDashboardController {
     @FXML private Label profileEmailLabel;
     @FXML private Label profilePhoneLabel;
     @FXML private Label profileRoleLabel;
+
+    @FXML private VBox myFeedbackPanel;
+    @FXML private ListView<String> myFeedbackListView;
+    @FXML private Label feedbackCountLabel;
+    @FXML private Label myFeedbackStatus;
 
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
     private final MenuItemDAO menuItemDAO = new MenuItemDAO();
@@ -129,6 +135,8 @@ public class CustomerDashboardController {
         historyPanel.setManaged(false);
         profilePanel.setVisible(false);
         profilePanel.setManaged(false);
+        myFeedbackPanel.setVisible(false);
+        myFeedbackPanel.setManaged(false);
         loadHomeInsights();
     }
 
@@ -143,6 +151,8 @@ public class CustomerDashboardController {
         historyPanel.setManaged(false);
         profilePanel.setVisible(false);
         profilePanel.setManaged(false);
+        myFeedbackPanel.setVisible(false);
+        myFeedbackPanel.setManaged(false);
     }
 
     @FXML
@@ -156,6 +166,8 @@ public class CustomerDashboardController {
         historyPanel.setManaged(true);
         profilePanel.setVisible(false);
         profilePanel.setManaged(false);
+        myFeedbackPanel.setVisible(false);
+        myFeedbackPanel.setManaged(false);
         loadHistory();
     }
 
@@ -170,7 +182,57 @@ public class CustomerDashboardController {
         historyPanel.setManaged(false);
         profilePanel.setVisible(true);
         profilePanel.setManaged(true);
+        myFeedbackPanel.setVisible(false);
+        myFeedbackPanel.setManaged(false);
         loadProfile();
+    }
+
+    @FXML
+    public void showFeedbackTab(ActionEvent event) {
+        setActiveTab(feedbackTabButton);
+        homePanel.setVisible(false);
+        homePanel.setManaged(false);
+        orderPanel.setVisible(false);
+        orderPanel.setManaged(false);
+        historyPanel.setVisible(false);
+        historyPanel.setManaged(false);
+        profilePanel.setVisible(false);
+        profilePanel.setManaged(false);
+        myFeedbackPanel.setVisible(true);
+        myFeedbackPanel.setManaged(true);
+        loadMyFeedback();
+    }
+
+    private void loadMyFeedback() {
+        try {
+            List<FeedbackEntry> entries = feedbackDAO.getByCustomer(me.getUserID());
+            if (entries.isEmpty()) {
+                myFeedbackListView.setItems(FXCollections.observableArrayList(
+                        "You haven't submitted any feedback yet."));
+                feedbackCountLabel.setText("0 feedback(s)");
+                myFeedbackStatus.setText("");
+                return;
+            }
+            List<String> display = new ArrayList<>();
+            for (FeedbackEntry e : entries) {
+                String stars = "★".repeat(e.getRating()) + "☆".repeat(5 - e.getRating());
+                String restName = getRestaurantName(e.getRestaurantID());
+                String comment = (e.getComment() == null || e.getComment().isBlank())
+                        ? "(no comment)" : e.getComment();
+                String date = e.getCreatedAt() != null && e.getCreatedAt().length() >= 10
+                        ? e.getCreatedAt().substring(0, 10) : "";
+                display.add(stars + "  " + restName
+                        + "  |  Order #" + e.getOrderItemID()
+                        + "  |  " + comment
+                        + (date.isEmpty() ? "" : "  [" + date + "]"));
+            }
+            myFeedbackListView.setItems(FXCollections.observableArrayList(display));
+            feedbackCountLabel.setText(entries.size() + " feedback(s)");
+            myFeedbackStatus.setText("");
+        } catch (SQLException ex) {
+            myFeedbackListView.setItems(FXCollections.observableArrayList("Could not load feedback."));
+            myFeedbackStatus.setText("Error loading feedback.");
+        }
     }
 
     private void loadHomeInsights() {
@@ -913,6 +975,7 @@ public class CustomerDashboardController {
         orderTabButton.setStyle(INACTIVE_TAB_STYLE);
         historyTabButton.setStyle(INACTIVE_TAB_STYLE);
         profileTabButton.setStyle(INACTIVE_TAB_STYLE);
+        feedbackTabButton.setStyle(INACTIVE_TAB_STYLE);
         activeTab.setStyle(ACTIVE_TAB_STYLE);
     }
 

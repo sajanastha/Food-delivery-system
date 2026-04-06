@@ -46,15 +46,21 @@ public class DriverDashboardController {
     @FXML private Button activeNavButton;
     @FXML private Button historyNavButton;
     @FXML private Button profileNavButton;
+    @FXML private Button feedbackNavButton;
 
     // Panels for bottom nav switching
     @FXML private VBox requestsPanel;
     @FXML private VBox activePanel;
     @FXML private VBox driverHistoryPanel;
     @FXML private VBox driverProfilePanel;
+    @FXML private VBox driverFeedbackPanel;
+    @FXML private ListView<String> driverFeedbackListView;
+    @FXML private Label driverFeedbackCountLabel;
+    @FXML private Label driverFeedbackStatus;
 
     private final OrderDAO      orderDAO      = new OrderDAO();
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
+    private final FeedbackDAO   feedbackDAO   = new FeedbackDAO();
 
     private Driver       me;
     private List<Order>  availableRequests  = new ArrayList<>();
@@ -98,6 +104,8 @@ public class DriverDashboardController {
         driverHistoryPanel.setManaged(false);
         driverProfilePanel.setVisible(false);
         driverProfilePanel.setManaged(false);
+        driverFeedbackPanel.setVisible(false);
+        driverFeedbackPanel.setManaged(false);
 
         switch (name) {
             case "requests" -> {
@@ -120,6 +128,12 @@ public class DriverDashboardController {
                 driverProfilePanel.setManaged(true);
                 setActiveNav(profileNavButton);
             }
+            case "feedback" -> {
+                driverFeedbackPanel.setVisible(true);
+                driverFeedbackPanel.setManaged(true);
+                setActiveNav(feedbackNavButton);
+                loadDriverFeedback();
+            }
         }
     }
 
@@ -128,6 +142,7 @@ public class DriverDashboardController {
         activeNavButton.setStyle(INACTIVE_NAV_STYLE);
         historyNavButton.setStyle(INACTIVE_NAV_STYLE);
         profileNavButton.setStyle(INACTIVE_NAV_STYLE);
+        feedbackNavButton.setStyle(INACTIVE_NAV_STYLE);
         if (activeButton != null) {
             activeButton.setStyle(ACTIVE_NAV_STYLE);
         }
@@ -137,6 +152,37 @@ public class DriverDashboardController {
     @FXML public void goActive(ActionEvent e)   { showPanel("active"); }
     @FXML public void goHistory(ActionEvent e)  { showPanel("history"); }
     @FXML public void goProfile(ActionEvent e)  { showPanel("profile"); }
+    @FXML public void goFeedback(ActionEvent e) { showPanel("feedback"); }
+
+    private void loadDriverFeedback() {
+        try {
+            List<FeedbackEntry> entries = feedbackDAO.getByDriver(me.getUserID());
+            if (entries.isEmpty()) {
+                driverFeedbackListView.setItems(FXCollections.observableArrayList(
+                        "No feedback received yet. Feedback appears here after customers rate delivered orders."));
+                driverFeedbackCountLabel.setText("0 feedback(s)");
+                driverFeedbackStatus.setText("");
+                return;
+            }
+            List<String> display = new ArrayList<>();
+            for (FeedbackEntry fe : entries) {
+                String stars = "★".repeat(fe.getRating()) + "☆".repeat(5 - fe.getRating());
+                String comment = (fe.getComment() == null || fe.getComment().isBlank())
+                        ? "(no comment)" : fe.getComment();
+                String date = fe.getCreatedAt() != null && fe.getCreatedAt().length() >= 10
+                        ? fe.getCreatedAt().substring(0, 10) : "";
+                display.add(stars + "  Order #" + fe.getOrderItemID()
+                        + "  |  " + comment
+                        + (date.isEmpty() ? "" : "  [" + date + "]"));
+            }
+            driverFeedbackListView.setItems(FXCollections.observableArrayList(display));
+            driverFeedbackCountLabel.setText(entries.size() + " feedback(s)");
+            driverFeedbackStatus.setText("");
+        } catch (SQLException ex) {
+            driverFeedbackListView.setItems(FXCollections.observableArrayList("Could not load feedback."));
+            driverFeedbackStatus.setText("Error loading feedback.");
+        }
+    }
 
     // ── Availability ──────────────────────────────────────────────────────────
     @FXML

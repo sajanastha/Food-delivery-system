@@ -391,6 +391,33 @@
                 </VBox>
             </VBox>
 
+            <!-- FEEDBACK PANEL -->
+            <VBox fx:id="myFeedbackPanel" spacing="14"
+                  visible="false" managed="false"
+                  style="-fx-padding: 20 22 22 22;">
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="My Feedback"
+                               style="-fx-font-size: 20px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #2D2D2D;"/>
+                        <Label text="All feedback you have submitted so far."
+                               style="-fx-font-size: 12px;
+                                      -fx-text-fill: #7a7a5a;"/>
+                    </VBox>
+                    <Label fx:id="feedbackCountLabel"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7a7a5a;"/>
+                </HBox>
+                <ListView fx:id="myFeedbackListView"
+                          VBox.vgrow="ALWAYS"
+                          style="-fx-border-color: #e8e8c8;
+                                 -fx-border-radius: 8;
+                                 -fx-font-size: 13px;"/>
+                <Label fx:id="myFeedbackStatus"
+                       text=""
+                       style="-fx-font-size: 12px; -fx-text-fill: #7a7a5a;"/>
+            </VBox>
+
         </StackPane>
     </center>
 
@@ -425,6 +452,17 @@
             <Button fx:id="historyTabButton"
                     text="📋  Orders"
                     onAction="#showHistoryTab"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"
+                    prefHeight="54"
+                    style="-fx-background-color: #F5F5DC;
+                           -fx-text-fill: #555;
+                           -fx-font-size: 13px;
+                           -fx-cursor: hand;
+                           -fx-background-radius: 0;"/>
+            <Button fx:id="feedbackTabButton"
+                    text="💬  Feedback"
+                    onAction="#showFeedbackTab"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
                     prefHeight="54"

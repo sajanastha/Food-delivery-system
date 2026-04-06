@@ -2,36 +2,68 @@ package com.fooddelivery;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FeedbackDAO {
     private final Connection conn =
             DatabaseManager.getInstance().getConnection();
 
-    public FeedbackEntry getByCustomerAndOrder(int customerID,
-            int orderID) throws SQLException {
-        String sql = "SELECT * FROM feedbacks WHERE customerID=? " +
-                "AND orderItemID=?";
+    /** Get feedback for a specific customer + order. */
+    public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
             ps.setInt(2, orderID);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return map(rs);
-            }
+            if (rs.next()) return map(rs);
         }
         return null;
     }
 
-    public void saveOrUpdate(int customerID, int restaurantID,
-            int orderID, int rating, String comment)
-            throws SQLException {
+    /** All feedback sent by a customer (customer Feedback tab). */
+    public List<FeedbackEntry> getByCustomer(int customerID) throws SQLException {
+        List<FeedbackEntry> list = new ArrayList<>();
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? ORDER BY createdAt DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
 
-        // Try update first
-        String updateSql = "UPDATE feedbacks SET rating=?,"
-            + "comment=?,createdAt=? WHERE customerID=?"
-            + " AND restaurantID=? AND orderItemID=?";
-        try (PreparedStatement ps =
-                conn.prepareStatement(updateSql)) {
+    /** All feedback received by a restaurant. */
+    public List<FeedbackEntry> getByRestaurant(int restaurantID) throws SQLException {
+        List<FeedbackEntry> list = new ArrayList<>();
+        String sql = "SELECT * FROM feedbacks WHERE restaurantID=? ORDER BY createdAt DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restaurantID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    /** All feedback for orders delivered by a driver (joins on orderID). */
+    public List<FeedbackEntry> getByDriver(int driverID) throws SQLException {
+        List<FeedbackEntry> list = new ArrayList<>();
+        String sql = "SELECT f.* FROM feedbacks f "
+                + "JOIN orders o ON f.orderItemID = o.orderID "
+                + "WHERE o.driverID = ? ORDER BY f.createdAt DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, driverID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    public void saveOrUpdate(int customerID, int restaurantID,
+            int orderID, int rating, String comment) throws SQLException {
+        String updateSql = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
+                + "WHERE customerID=? AND restaurantID=? AND orderItemID=?";
+        try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
             ps.setInt(1, rating);
             ps.setString(2, comment);
             ps.setString(3, LocalDateTime.now().toString());
@@ -40,14 +72,10 @@ public class FeedbackDAO {
             ps.setInt(6, orderID);
             if (ps.executeUpdate() > 0) return;
         }
-
-        // Insert new
         String insertSql = "INSERT INTO feedbacks "
-            + "(customerID,restaurantID,orderItemID,"
-            + "rating,comment,createdAt) "
-            + "VALUES (?,?,?,?,?,?)";
-        try (PreparedStatement ps =
-                conn.prepareStatement(insertSql)) {
+                + "(customerID, restaurantID, orderItemID, rating, comment, createdAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
             ps.setInt(1, customerID);
             ps.setInt(2, restaurantID);
             ps.setInt(3, orderID);
