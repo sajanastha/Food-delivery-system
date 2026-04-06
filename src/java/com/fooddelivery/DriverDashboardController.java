@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -41,6 +42,10 @@ public class DriverDashboardController {
     @FXML private Label            historyStatus;
 
     @FXML private TextArea profileArea;
+    @FXML private Button requestsNavButton;
+    @FXML private Button activeNavButton;
+    @FXML private Button historyNavButton;
+    @FXML private Button profileNavButton;
 
     // Panels for bottom nav switching
     @FXML private VBox requestsPanel;
@@ -56,6 +61,21 @@ public class DriverDashboardController {
     private List<Order>  activeDeliveries   = new ArrayList<>();
     private List<Order>  completedDeliveries= new ArrayList<>();
     private final Set<Integer> skippedRequestIds = new HashSet<>();
+
+    private static final String ACTIVE_NAV_STYLE =
+            "-fx-background-color: #FF7518;"
+            + "-fx-text-fill: white;"
+            + "-fx-font-size: 13px;"
+            + "-fx-font-weight: bold;"
+            + "-fx-cursor: hand;"
+            + "-fx-background-radius: 0;";
+
+    private static final String INACTIVE_NAV_STYLE =
+            "-fx-background-color: #F5F5DC;"
+            + "-fx-text-fill: #555;"
+            + "-fx-font-size: 13px;"
+            + "-fx-cursor: hand;"
+            + "-fx-background-radius: 0;";
 
     @FXML
     public void initialize() {
@@ -83,19 +103,33 @@ public class DriverDashboardController {
             case "requests" -> {
                 requestsPanel.setVisible(true);
                 requestsPanel.setManaged(true);
+                setActiveNav(requestsNavButton);
             }
             case "active" -> {
                 activePanel.setVisible(true);
                 activePanel.setManaged(true);
+                setActiveNav(activeNavButton);
             }
             case "history" -> {
                 driverHistoryPanel.setVisible(true);
                 driverHistoryPanel.setManaged(true);
+                setActiveNav(historyNavButton);
             }
             case "profile" -> {
                 driverProfilePanel.setVisible(true);
                 driverProfilePanel.setManaged(true);
+                setActiveNav(profileNavButton);
             }
+        }
+    }
+
+    private void setActiveNav(Button activeButton) {
+        requestsNavButton.setStyle(INACTIVE_NAV_STYLE);
+        activeNavButton.setStyle(INACTIVE_NAV_STYLE);
+        historyNavButton.setStyle(INACTIVE_NAV_STYLE);
+        profileNavButton.setStyle(INACTIVE_NAV_STYLE);
+        if (activeButton != null) {
+            activeButton.setStyle(ACTIVE_NAV_STYLE);
         }
     }
 

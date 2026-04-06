@@ -21,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -317,12 +318,18 @@ public class CustomerDashboardController {
                 + "-fx-padding: 0 0 14 0;"
                 + "-fx-cursor: hand;");
 
-        // Colored banner instead of image
-        Region banner = new Region();
+        // Branded top panel instead of a plain gradient
+        StackPane banner = new StackPane();
         banner.setPrefHeight(90);
         banner.setStyle(
-                "-fx-background-color: linear-gradient(to bottom right, #FF6B35, #f97316);"
+                "-fx-background-color: linear-gradient(to bottom right, #fde8d8, #ffd7c2);"
                 + "-fx-background-radius: 14 14 0 0;");
+        Label brandLabel = new Label("So Yummy");
+        brandLabel.setStyle(
+                "-fx-font-size: 18px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #c85a22;");
+        banner.getChildren().add(brandLabel);
 
         Label name = new Label(r.getRestaurantName());
         name.setWrapText(true);
@@ -357,12 +364,18 @@ public class CustomerDashboardController {
                 + "-fx-padding: 0 0 14 0;"
                 + "-fx-cursor: hand;");
 
-        // Colored banner
-        Region banner = new Region();
+        // Branded top panel instead of a plain gradient
+        StackPane banner = new StackPane();
         banner.setPrefHeight(90);
         banner.setStyle(
-                "-fx-background-color: linear-gradient(to bottom right, #22c55e, #16a34a);"
+                "-fx-background-color: linear-gradient(to bottom right, #d9f7e1, #b8f0d1);"
                 + "-fx-background-radius: 14 14 0 0;");
+        Label brandLabel = new Label("So Yummy");
+        brandLabel.setStyle(
+                "-fx-font-size: 18px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #167f4f;");
+        banner.getChildren().add(brandLabel);
 
         Label name = new Label(itemName);
         name.setWrapText(true);

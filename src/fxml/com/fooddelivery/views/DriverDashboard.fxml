@@ -350,7 +350,8 @@
         <HBox style="-fx-background-color: white;
                      -fx-border-color: #d8d8b8;
                      -fx-border-width: 1 0 0 0;">
-            <Button text="📬  Requests"
+            <Button fx:id="requestsNavButton"
+                    text="📬  Requests"
                     onAction="#goRequests"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
@@ -361,7 +362,8 @@
                            -fx-font-weight: bold;
                            -fx-cursor: hand;
                            -fx-background-radius: 0;"/>
-            <Button text="🚚  Active"
+            <Button fx:id="activeNavButton"
+                    text="🚚  Active"
                     onAction="#goActive"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
@@ -371,7 +373,8 @@
                            -fx-font-size: 13px;
                            -fx-cursor: hand;
                            -fx-background-radius: 0;"/>
-            <Button text="📋  History"
+            <Button fx:id="historyNavButton"
+                    text="📋  History"
                     onAction="#goHistory"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
@@ -381,7 +384,8 @@
                            -fx-font-size: 13px;
                            -fx-cursor: hand;
                            -fx-background-radius: 0;"/>
-            <Button text="👤  Profile"
+            <Button fx:id="profileNavButton"
+                    text="👤  Profile"
                     onAction="#goProfile"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
