@@ -412,7 +412,7 @@
                            -fx-cursor: hand;
                            -fx-background-radius: 0;"/>
             <Button fx:id="orderTabButton"
-                    text="🍽  Order"
+                    text="🍽  Place Order"
                     onAction="#showOrderTab"
                     HBox.hgrow="ALWAYS"
                     maxWidth="Infinity"
