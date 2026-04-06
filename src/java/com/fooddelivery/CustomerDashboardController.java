@@ -529,28 +529,61 @@ public class CustomerDashboardController {
     @FXML
     private void handleRestaurantSelected() {
         int idx = restaurantListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= allRestaurants.size()) {
-            return;
-        }
+        if (idx < 0 || idx >= allRestaurants.size()) return;
 
         selectedRest = allRestaurants.get(idx);
         restaurantInfoLabel.setText(selectedRest.getAddress()
-                + " | Hours: " + selectedRest.getOperatingHours());
-        menuTitleLabel.setText(selectedRest.getRestaurantName() + " - Menu");
+                + "  ·  Hours: " + selectedRest.getOperatingHours());
+        menuTitleLabel.setText(selectedRest.getRestaurantName() + " — Menu");
 
         try {
-            currentMenu = menuItemDAO.getAvailable(selectedRest.getRestaurantID());
+            List<MenuItem> raw =
+                menuItemDAO.getAvailable(selectedRest.getRestaurantID());
+
+            // Sort by category order, then alphabetically within each
+            raw.sort((a, b) -> {
+                int ai = categoryRank(a.getCategory());
+                int bi = categoryRank(b.getCategory());
+                if (ai != bi) return ai - bi;
+                return a.getName().compareToIgnoreCase(b.getName());
+            });
+
+            // Build display list with category headers
+            currentMenu = new ArrayList<>();
             List<String> display = new ArrayList<>();
-            for (MenuItem item : currentMenu) {
-                display.add(item.getName()
-                        + " | " + item.getCategory()
-                        + " | NPR " + String.format("%.0f", item.getPrice()));
+            String lastCat = "";
+            for (MenuItem m : raw) {
+                String cat = m.getCategory() == null
+                        ? "Other" : m.getCategory();
+                if (!cat.equalsIgnoreCase(lastCat)) {
+                    display.add("\u2500\u2500\u2500 "
+                            + cat.toUpperCase() + " \u2500\u2500\u2500");
+                    currentMenu.add(null); // header placeholder
+                    lastCat = cat;
+                }
+                currentMenu.add(m);
+                display.add("    " + m.getName()
+                        + "   NPR " + String.format("%.2f", m.getPrice()));
             }
-            menuListView.setItems(FXCollections.observableArrayList(display));
+
+            menuListView.setItems(
+                FXCollections.observableArrayList(display));
             selectedItemLabel.setText("");
         } catch (SQLException ex) {
             browseStatus.setText("Could not load menu.");
         }
+    }
+
+    // Same category order as the restaurant portal
+    private int categoryRank(String cat) {
+        if (cat == null) return 99;
+        return switch (cat.toLowerCase().trim()) {
+            case "starter"  -> 0;
+            case "main"     -> 1;
+            case "drink"    -> 2;
+            case "desert", "dessert" -> 3;
+            default         -> 4;
+        };
     }
 
     @FXML
@@ -562,6 +595,11 @@ public class CustomerDashboardController {
         }
 
         MenuItem item = currentMenu.get(idx);
+        if (item == null) {  // clicked a category header — ignore
+            menuListView.getSelectionModel().clearSelection();
+            browseStatus.setText("Select a specific menu item.");
+            return;
+        }
         for (OrderItem existing : cart) {
             if (existing.getMenuItemID() == item.getItemID()) {
                 existing.setQuantity(existing.getQuantity() + 1);
@@ -845,64 +883,110 @@ public class CustomerDashboardController {
         Stage popup = new Stage();
         popup.initModality(Modality.APPLICATION_MODAL);
         popup.setTitle("Order Feedback");
-        popup.setMinWidth(480);
-        popup.setMinHeight(420);
+        popup.setMinWidth(500);
+        popup.setMinHeight(440);
 
         VBox root = new VBox(14);
-        root.setStyle("-fx-padding: 24; -fx-background-color: white;");
+        root.setStyle("-fx-padding: 26;"
+                + "-fx-background-color: white;");
 
-        Label title = new Label("Feedback for Order #" + order.getOrderID());
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1E293B;");
+        // Title
+        Label title = new Label(
+            "Feedback for Order #" + order.getOrderID());
+        title.setStyle("-fx-font-size: 17px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #1E293B;");
 
-        Label subtitle = new Label(getRestaurantName(order.getRestaurantID())
-                + " | " + firstItemsSummary(order));
-        subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748B;");
+        // Subtitle — restaurant + items
+        Label subtitle = new Label(
+            getRestaurantName(order.getRestaurantID())
+            + "  ·  " + firstItemsSummary(order));
+        subtitle.setStyle("-fx-font-size: 12px;"
+                + "-fx-text-fill: #64748B;");
 
-        Label ratingLbl = new Label("Rating");
-        ratingLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        // Divider
+        Separator sep = new Separator();
 
-        HBox stars = new HBox(6);
-        ToggleGroup group = new ToggleGroup();
-        List<ToggleButton> toggles = new ArrayList<>();
+        // Rating label
+        Label ratingLbl = new Label("Your Rating");
+        ratingLbl.setStyle("-fx-font-size: 13px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #334155;");
+
+        // Star buttons — use an int[] to track selection
+        // so clicking same star twice keeps it selected
+        final int[] selectedRating = {0};
+
+        HBox stars = new HBox(8);
+        List<Button> starButtons = new ArrayList<>();
+
         for (int i = 1; i <= 5; i++) {
-            ToggleButton star = new ToggleButton(i + " Star");
-            star.setToggleGroup(group);
-            star.setUserData(i);
-            star.setStyle("-fx-background-color: #DBEAFE;"
-                    + "-fx-text-fill: #1D4ED8;"
-                    + "-fx-background-radius: 8;"
-                    + "-fx-font-size: 12px;"
-                    + "-fx-padding: 7 12;"
-                    + "-fx-cursor: hand;");
-            toggles.add(star);
-            stars.getChildren().add(star);
+            final int starVal = i;
+            Button starBtn = new Button("★");
+            starBtn.setStyle(unselectedStarStyle());
+            starBtn.setUserData(starVal);
+            starBtn.setOnAction(ev -> {
+                selectedRating[0] = starVal;
+                // Update all button styles
+                for (Button b : starButtons) {
+                    int bVal = (int) b.getUserData();
+                    b.setStyle(bVal <= starVal
+                        ? selectedStarStyle()
+                        : unselectedStarStyle());
+                }
+            });
+            starButtons.add(starBtn);
+            stars.getChildren().add(starBtn);
         }
 
-        Label commentLbl = new Label("Comment");
-        commentLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        // Comment
+        Label commentLbl = new Label("Comment  (optional)");
+        commentLbl.setStyle("-fx-font-size: 13px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: #334155;");
 
         TextArea commentArea = new TextArea();
-        commentArea.setPromptText("Write your feedback here...");
-        commentArea.setPrefRowCount(5);
+        commentArea.setPromptText("Tell the restaurant what you thought...");
+        commentArea.setPrefRowCount(4);
         commentArea.setWrapText(true);
         commentArea.setStyle("-fx-border-color: #CBD5E1;"
                 + "-fx-border-radius: 8;"
                 + "-fx-background-radius: 8;"
                 + "-fx-font-size: 13px;");
 
+        // Status label (errors)
         Label statusLabel = new Label("");
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+        statusLabel.setStyle("-fx-font-size: 12px;"
+                + "-fx-text-fill: #DC2626;");
 
+        // Pre-fill if feedback already exists
+        try {
+            FeedbackEntry existing = feedbackDAO
+                    .getByCustomerAndOrder(
+                        me.getUserID(), order.getOrderID());
+            if (existing != null) {
+                commentArea.setText(existing.getComment());
+                selectedRating[0] = existing.getRating();
+                for (Button b : starButtons) {
+                    int bVal = (int) b.getUserData();
+                    b.setStyle(bVal <= existing.getRating()
+                        ? selectedStarStyle()
+                        : unselectedStarStyle());
+                }
+            }
+        } catch (SQLException ignored) {}
+
+        // Buttons
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-background-color: #E2E8F0;"
                 + "-fx-text-fill: #334155;"
                 + "-fx-background-radius: 8;"
-                + "-fx-padding: 9 18;"
+                + "-fx-padding: 9 20;"
                 + "-fx-cursor: hand;");
         closeBtn.setOnAction(ev -> popup.close());
 
         Button saveBtn = new Button("Save Feedback");
-        saveBtn.setStyle("-fx-background-color: #2563EB;"
+        saveBtn.setStyle("-fx-background-color: #FF7518;"
                 + "-fx-text-fill: white;"
                 + "-fx-font-weight: bold;"
                 + "-fx-background-radius: 8;"
@@ -911,55 +995,64 @@ public class CustomerDashboardController {
         HBox.setHgrow(saveBtn, Priority.ALWAYS);
         saveBtn.setMaxWidth(Double.MAX_VALUE);
 
-        try {
-            FeedbackEntry existing = feedbackDAO.getByCustomerAndOrder(
-                    me.getUserID(), order.getOrderID());
-            if (existing != null) {
-                commentArea.setText(existing.getComment());
-                for (ToggleButton toggle : toggles) {
-                    if ((int) toggle.getUserData() == existing.getRating()) {
-                        toggle.setSelected(true);
-                        break;
-                    }
-                }
-                saveBtn.setText("Update Feedback");
-            } else {
-                toggles.get(4).setSelected(true);
-            }
-        } catch (SQLException e) {
-            toggles.get(4).setSelected(true);
-        }
-
         saveBtn.setOnAction(ev -> {
-            if (group.getSelectedToggle() == null) {
-                statusLabel.setText("Select a rating.");
+            if (selectedRating[0] == 0) {
+                statusLabel.setText(
+                    "Please click a star to select a rating.");
                 return;
             }
-            int rating = (int) group.getSelectedToggle().getUserData();
             String comment = commentArea.getText().trim();
             try {
                 feedbackDAO.saveOrUpdate(
-                        me.getUserID(),
-                        order.getRestaurantID(),
-                        order.getOrderID(),
-                        rating,
-                        comment);
+                    me.getUserID(),
+                    order.getRestaurantID(),
+                    order.getOrderID(),
+                    selectedRating[0],
+                    comment);
                 popup.close();
                 updateFeedbackButton();
-                historyDetailArea.setText(buildHistoryDetails(order));
+                historyDetailArea.setText(
+                    buildHistoryDetails(order));
+                // Refresh feedback tab so it shows immediately
+                loadMyFeedback();
                 showAlert("Feedback Saved",
-                        "Your feedback for Order #" + order.getOrderID() + " has been saved.");
+                    "Your " + selectedRating[0] + "-star review"
+                    + " for Order #" + order.getOrderID()
+                    + " has been saved.\nThank you!");
             } catch (SQLException e) {
                 statusLabel.setText("Could not save feedback.");
             }
         });
 
         HBox actions = new HBox(10, closeBtn, saveBtn);
-        root.getChildren().addAll(title, subtitle, ratingLbl, stars, commentLbl, commentArea,
-                statusLabel, actions);
+
+        root.getChildren().addAll(
+            title, subtitle, sep,
+            ratingLbl, stars,
+            commentLbl, commentArea,
+            statusLabel, actions);
 
         popup.setScene(new Scene(root));
         popup.showAndWait();
+    }
+
+    // Star button styles
+    private String selectedStarStyle() {
+        return "-fx-background-color: #FF7518;"
+             + "-fx-text-fill: white;"
+             + "-fx-background-radius: 8;"
+             + "-fx-font-size: 22px;"
+             + "-fx-padding: 6 12;"
+             + "-fx-cursor: hand;";
+    }
+
+    private String unselectedStarStyle() {
+        return "-fx-background-color: #FFF0E0;"
+             + "-fx-text-fill: #FF7518;"
+             + "-fx-background-radius: 8;"
+             + "-fx-font-size: 22px;"
+             + "-fx-padding: 6 12;"
+             + "-fx-cursor: hand;";
     }
 
     private void loadProfile() {
@@ -1078,5 +1171,5 @@ public class CustomerDashboardController {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
+    }   
 }

@@ -392,30 +392,51 @@
             </VBox>
 
             <!-- FEEDBACK PANEL -->
-            <VBox fx:id="myFeedbackPanel" spacing="14"
-                  visible="false" managed="false"
-                  style="-fx-padding: 20 22 22 22;">
-                <HBox alignment="CENTER_LEFT">
-                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <VBox fx:id="myFeedbackPanel" spacing="0"
+                  visible="false" managed="false">
+
+                <!-- Header -->
+                <HBox alignment="CENTER_LEFT" spacing="12"
+                      style="-fx-padding: 14 22 12 22;
+                             -fx-background-color: white;
+                             -fx-border-color: #d8d8b8;
+                             -fx-border-width: 0 0 1 0;">
+                    <VBox spacing="3" HBox.hgrow="ALWAYS">
                         <Label text="My Feedback"
-                               style="-fx-font-size: 20px;
+                               style="-fx-font-size: 18px;
                                       -fx-font-weight: bold;
                                       -fx-text-fill: #2D2D2D;"/>
-                        <Label text="All feedback you have submitted so far."
+                        <Label text="All reviews you have submitted — click an order in History to add one."
                                style="-fx-font-size: 12px;
                                       -fx-text-fill: #7a7a5a;"/>
                     </VBox>
                     <Label fx:id="feedbackCountLabel"
-                           style="-fx-font-size: 12px; -fx-text-fill: #7a7a5a;"/>
+                           style="-fx-font-size: 12px;
+                                  -fx-text-fill: #FF7518;
+                                  -fx-font-weight: bold;
+                                  -fx-background-color: #fff0e0;
+                                  -fx-background-radius: 20;
+                                  -fx-padding: 4 12;"/>
                 </HBox>
-                <ListView fx:id="myFeedbackListView"
-                          VBox.vgrow="ALWAYS"
-                          style="-fx-border-color: #e8e8c8;
-                                 -fx-border-radius: 8;
-                                 -fx-font-size: 13px;"/>
+
+                <!-- Feedback list -->
+                <VBox VBox.vgrow="ALWAYS"
+                      style="-fx-padding: 16 20;">
+                    <ListView fx:id="myFeedbackListView"
+                              VBox.vgrow="ALWAYS"
+                              style="-fx-border-color: #d8d8b8;
+                                     -fx-border-radius: 10;
+                                     -fx-background-color: white;
+                                     -fx-background-radius: 10;
+                                     -fx-font-size: 13px;
+                                     -fx-padding: 6;"/>
+                </VBox>
+
                 <Label fx:id="myFeedbackStatus"
                        text=""
-                       style="-fx-font-size: 12px; -fx-text-fill: #7a7a5a;"/>
+                       style="-fx-font-size: 12px;
+                              -fx-text-fill: #7a7a5a;
+                              -fx-padding: 0 22 10 22;"/>
             </VBox>
 
         </StackPane>
