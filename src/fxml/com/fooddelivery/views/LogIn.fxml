@@ -93,12 +93,6 @@
                                -fx-font-size: 12px;
                                -fx-cursor: hand;"/>
             </VBox>
-
-            <Label text="Admin: admin@gmail.com / admin123"
-                   style="-fx-text-fill: #94A3B8;
-                          -fx-font-size: 9px;"
-                   maxWidth="Infinity"
-                   alignment="CENTER"/>
         </VBox>
     </VBox>
 </StackPane>
