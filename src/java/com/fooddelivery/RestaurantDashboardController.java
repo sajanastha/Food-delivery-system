@@ -8,7 +8,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
 import javafx.stage.Stage;
 import java.sql.*;
 import java.time.LocalDate;
@@ -57,7 +60,7 @@ public class RestaurantDashboardController {
     @FXML private Label orderStatus;
 
     // Reports panel
-    @FXML private TextArea reportArea;
+    @FXML private VBox reportCardBox;
 
     // Feedback panel
     @FXML private ListView<FeedbackEntry> feedbackListView;
@@ -447,20 +450,10 @@ public class RestaurantDashboardController {
         try {
             SalesReport report = reportService.weeklyReport(
                     myRestaurant.getRestaurantID());
-
-            if (report.getTotalOrders() == 0) {
-                reportArea.setText(
-                    "WEEKLY REPORT\n"
-                    + "─────────────────────────────────\n\n"
-                    + "No completed orders in the last 7 days.\n\n"
-                    + "Keep accepting orders and the data\n"
-                    + "will populate here automatically.");
-            } else {
-                reportArea.setText(buildReportText(
-                    report, "WEEKLY", 7));
-            }
+            buildReportCard(report, "WEEKLY SALES REPORT",
+                    7, report.getTotalOrders() == 0);
         } catch (SQLException ex) {
-            reportArea.setText("Error generating report.");
+            buildErrorCard("Error generating weekly report.");
         }
     }
 
@@ -470,43 +463,135 @@ public class RestaurantDashboardController {
         try {
             SalesReport report = reportService.monthlyReport(
                     myRestaurant.getRestaurantID());
-
-            if (report.getTotalOrders() == 0) {
-                reportArea.setText(
-                    "MONTHLY REPORT\n"
-                    + "─────────────────────────────────\n\n"
-                    + "No completed orders in the last 30 days.\n\n"
-                    + "Keep accepting orders and the data\n"
-                    + "will populate here automatically.");
-            } else {
-                reportArea.setText(buildReportText(
-                    report, "MONTHLY", 30));
-            }
+            buildReportCard(report, "MONTHLY SALES REPORT",
+                    30, report.getTotalOrders() == 0);
         } catch (SQLException ex) {
-            reportArea.setText("Error generating report.");
+            buildErrorCard("Error generating monthly report.");
         }
     }
 
-    private String buildReportText(SalesReport r,
-            String type, int days) {
+    private void buildReportCard(SalesReport r, String title,
+                                  int days, boolean empty) {
+        reportCardBox.getChildren().clear();
+
+        // ── Big centred yellow title ───────────────────────────────
+        Label titleLabel = new Label(title);
+        titleLabel.setMaxWidth(Double.MAX_VALUE);
+        titleLabel.setAlignment(javafx.geometry.Pos.CENTER);
+        titleLabel.setStyle(
+                "-fx-font-size: 26px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-text-fill: #FF7518;" +
+                "-fx-padding: 0 0 18 0;");
+        reportCardBox.getChildren().add(titleLabel);
+
+        // ── Full-width separator ───────────────────────────────────
+        Separator sep1 = new Separator();
+        sep1.setMaxWidth(Double.MAX_VALUE);
+        sep1.setStyle("-fx-background-color: #d8d8b8;");
+        reportCardBox.getChildren().add(sep1);
+
+        if (empty) {
+            Label noData = new Label(
+                    "No completed orders in the last " + days + " days.\n" +
+                    "Keep accepting orders and the data will appear here.");
+            noData.setWrapText(true);
+            noData.setStyle(
+                    "-fx-font-size: 14px;" +
+                    "-fx-text-fill: #999;" +
+                    "-fx-padding: 30 0;" +
+                    "-fx-alignment: center;");
+            noData.setMaxWidth(Double.MAX_VALUE);
+            noData.setAlignment(javafx.geometry.Pos.CENTER);
+            reportCardBox.getChildren().add(noData);
+            return;
+        }
+
+        // ── Period & restaurant sub-heading ───────────────────────
         LocalDate to   = LocalDate.now();
         LocalDate from = to.minusDays(days);
-        return type + " SALES REPORT\n"
-            + "─────────────────────────────────\n"
-            + "Period:          " + from + "  to  " + to + "\n"
-            + "Restaurant:      "
-            + myRestaurant.getRestaurantName() + "\n"
-            + "─────────────────────────────────\n"
-            + "Total Orders:    " + r.getTotalOrders() + "\n"
-            + "Total Revenue:   NPR "
-            + String.format("%.2f", r.getTotalRevenue()) + "\n"
-            + "Popular Item:    " + r.getTopSellingItem() + "\n"
-            + "─────────────────────────────────\n"
-            + "Avg per Order:   NPR "
-            + String.format("%.2f",
-                r.getTotalOrders() > 0
-                    ? r.getTotalRevenue() / r.getTotalOrders()
-                    : 0) + "\n";
+        Label periodLabel = new Label(
+                from + "  →  " + to +
+                "   |   " + myRestaurant.getRestaurantName());
+        periodLabel.setMaxWidth(Double.MAX_VALUE);
+        periodLabel.setAlignment(javafx.geometry.Pos.CENTER);
+        periodLabel.setStyle(
+                "-fx-font-size: 12px;" +
+                "-fx-text-fill: #888;" +
+                "-fx-padding: 10 0 22 0;");
+        reportCardBox.getChildren().add(periodLabel);
+
+        // ── Stat cards row ─────────────────────────────────────────
+        HBox statsRow = new HBox(16);
+        statsRow.setAlignment(javafx.geometry.Pos.CENTER);
+        statsRow.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(statsRow, Priority.ALWAYS);
+
+        double avgPerOrder = r.getTotalOrders() > 0
+                ? r.getTotalRevenue() / r.getTotalOrders() : 0;
+
+        statsRow.getChildren().addAll(
+            makeStatCard("📦", "Total Orders",
+                    String.valueOf(r.getTotalOrders()), "#4d9078"),
+            makeStatCard("💰", "Total Revenue",
+                    "NPR " + String.format("%.2f", r.getTotalRevenue()), "#FF7518"),
+            makeStatCard("🍽", "Popular Item",
+                    r.getTopSellingItem(), "#5b7ec7"),
+            makeStatCard("📊", "Avg per Order",
+                    "NPR " + String.format("%.2f", avgPerOrder), "#9b59b6")
+        );
+        reportCardBox.getChildren().add(statsRow);
+
+        // ── Bottom separator ───────────────────────────────────────
+        Separator sep2 = new Separator();
+        sep2.setMaxWidth(Double.MAX_VALUE);
+        sep2.setStyle("-fx-background-color: #d8d8b8; -fx-padding: 18 0 0 0;");
+        VBox.setMargin(sep2, new javafx.geometry.Insets(24, 0, 0, 0));
+        reportCardBox.getChildren().add(sep2);
+    }
+
+    private VBox makeStatCard(String icon, String label,
+                               String value, String accent) {
+        Label iconLbl = new Label(icon);
+        iconLbl.setStyle("-fx-font-size: 28px;");
+        iconLbl.setAlignment(javafx.geometry.Pos.CENTER);
+        iconLbl.setMaxWidth(Double.MAX_VALUE);
+
+        Label valueLbl = new Label(value);
+        valueLbl.setWrapText(true);
+        valueLbl.setAlignment(javafx.geometry.Pos.CENTER);
+        valueLbl.setMaxWidth(Double.MAX_VALUE);
+        valueLbl.setStyle(
+                "-fx-font-size: 20px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-text-fill: " + accent + ";");
+
+        Label labelLbl = new Label(label);
+        labelLbl.setAlignment(javafx.geometry.Pos.CENTER);
+        labelLbl.setMaxWidth(Double.MAX_VALUE);
+        labelLbl.setStyle(
+                "-fx-font-size: 11px;" +
+                "-fx-text-fill: #888;" +
+                "-fx-padding: 2 0 0 0;");
+
+        VBox card = new VBox(6, iconLbl, valueLbl, labelLbl);
+        card.setAlignment(javafx.geometry.Pos.CENTER);
+        card.setPadding(new javafx.geometry.Insets(20));
+        HBox.setHgrow(card, Priority.ALWAYS);
+        card.setStyle(
+                "-fx-background-color: #fafafa;" +
+                "-fx-background-radius: 12;" +
+                "-fx-border-color: #e8e8c8;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-width: 1;");
+        return card;
+    }
+
+    private void buildErrorCard(String msg) {
+        reportCardBox.getChildren().clear();
+        Label err = new Label(msg);
+        err.setStyle("-fx-font-size: 13px; -fx-text-fill: #c0392b;");
+        reportCardBox.getChildren().add(err);
     }
 
     // ── Feedback ─────────────────────────────────────────────────
