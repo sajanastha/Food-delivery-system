@@ -997,8 +997,7 @@ public class CustomerDashboardController {
 
         saveBtn.setOnAction(ev -> {
             if (selectedRating[0] == 0) {
-                statusLabel.setText(
-                    "Please click a star to select a rating.");
+                statusLabel.setText("Please click a star to select a rating.");
                 return;
             }
             String comment = commentArea.getText().trim();
@@ -1009,18 +1008,20 @@ public class CustomerDashboardController {
                     order.getOrderID(),
                     selectedRating[0],
                     comment);
+                // Success — close popup and refresh everything
                 popup.close();
                 updateFeedbackButton();
-                historyDetailArea.setText(
-                    buildHistoryDetails(order));
-                // Refresh feedback tab so it shows immediately
-                loadMyFeedback();
+                historyDetailArea.setText(buildHistoryDetails(order));
+                loadMyFeedback(); // refresh customer Feedback tab immediately
                 showAlert("Feedback Saved",
                     "Your " + selectedRating[0] + "-star review"
                     + " for Order #" + order.getOrderID()
                     + " has been saved.\nThank you!");
             } catch (SQLException e) {
-                statusLabel.setText("Could not save feedback.");
+                // Print full stack trace to console AND show the actual SQL error
+                e.printStackTrace();
+                statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                statusLabel.setText("Save failed: " + e.getMessage());
             }
         });
 

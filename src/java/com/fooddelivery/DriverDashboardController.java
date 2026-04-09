@@ -167,19 +167,24 @@ public class DriverDashboardController {
             List<String> display = new ArrayList<>();
             for (FeedbackEntry fe : entries) {
                 String stars = "★".repeat(fe.getRating()) + "☆".repeat(5 - fe.getRating());
+                String who = fe.getCustomerName().isBlank()
+                        ? "Customer #" + fe.getCustomerID()
+                        : fe.getCustomerName();
                 String comment = (fe.getComment() == null || fe.getComment().isBlank())
                         ? "(no comment)" : fe.getComment();
                 String date = fe.getCreatedAt() != null && fe.getCreatedAt().length() >= 10
-                        ? fe.getCreatedAt().substring(0, 10) : "";
-                display.add(stars + "  Order #" + fe.getOrderItemID()
-                        + "  |  " + comment
-                        + (date.isEmpty() ? "" : "  [" + date + "]"));
+                        ? "  [" + fe.getCreatedAt().substring(0, 10) + "]" : "";
+                display.add(stars + "  " + who
+                        + "  |  Order #" + fe.getOrderItemID()
+                        + "  |  " + comment + date);
             }
             driverFeedbackListView.setItems(FXCollections.observableArrayList(display));
             driverFeedbackCountLabel.setText(entries.size() + " feedback(s)");
             driverFeedbackStatus.setText("");
         } catch (SQLException ex) {
-            driverFeedbackListView.setItems(FXCollections.observableArrayList("Could not load feedback."));
+            ex.printStackTrace();
+            driverFeedbackListView.setItems(FXCollections.observableArrayList(
+                    "Could not load feedback: " + ex.getMessage()));
             driverFeedbackStatus.setText("Error loading feedback.");
         }
     }

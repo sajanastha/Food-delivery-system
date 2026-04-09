@@ -77,6 +77,7 @@ public class RestaurantDashboardController {
     private final OrderDAO      orderDAO      = new OrderDAO();
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
     private final ReportService reportService = new ReportService();
+    private final FeedbackDAO   feedbackDAO   = new FeedbackDAO();
 
     private Restaurant      myRestaurant;
     private List<MenuItem>  menuItems = new ArrayList<>();
@@ -144,6 +145,7 @@ public class RestaurantDashboardController {
                 feedbackPanel.setVisible(true);
                 feedbackPanel.setManaged(true);
                 setActiveTab(feedbackTabButton);
+                loadFeedbackList(); // auto-load on tab open
             }
             case "profile" -> {
                 profilePanel.setVisible(true);
@@ -510,43 +512,38 @@ public class RestaurantDashboardController {
     // ── Feedback ─────────────────────────────────────────────────
     @FXML
     private void handleLoadFeedback(ActionEvent e) {
+        loadFeedbackList(); // kept for the Load Feedback button in FXML
+    }
+
+    private void loadFeedbackList() {
         if (myRestaurant == null) return;
         try {
-            Connection conn = DatabaseManager
-                    .getInstance().getConnection();
-            String sql = "SELECT f.rating, f.comment, "
-                + "u.fullName, f.createdAt "
-                + "FROM feedbacks f "
-                + "JOIN users u ON f.customerID=u.userID "
-                + "WHERE f.restaurantID=? "
-                + "ORDER BY f.createdAt DESC";
-            List<String> display = new ArrayList<>();
-            try (PreparedStatement ps =
-                    conn.prepareStatement(sql)) {
-                ps.setInt(1,
-                    myRestaurant.getRestaurantID());
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    String stars = "★".repeat(
-                        rs.getInt("rating"))
-                        + "☆".repeat(
-                        5 - rs.getInt("rating"));
-                    display.add(stars
-                        + "   " + rs.getString("fullName")
-                        + "   —   " + rs.getString("comment"));
-                }
+            List<FeedbackEntry> entries =
+                    feedbackDAO.getByRestaurant(myRestaurant.getRestaurantID());
+            if (entries.isEmpty()) {
+                feedbackListView.setItems(FXCollections.observableArrayList(
+                        "No feedback received yet. "
+                        + "Feedback will appear here after customers rate their orders."));
+                return;
             }
-            if (display.isEmpty())
-                display.add(
-                    "No feedback received yet. "
-                    + "Feedback will appear here after "
-                    + "customers rate their orders.");
-            feedbackListView.setItems(
-                FXCollections.observableArrayList(display));
+            List<String> display = new ArrayList<>();
+            for (FeedbackEntry fe : entries) {
+                String stars = "★".repeat(fe.getRating())
+                        + "☆".repeat(5 - fe.getRating());
+                String who = fe.getCustomerName().isBlank()
+                        ? "Customer #" + fe.getCustomerID()
+                        : fe.getCustomerName();
+                String comment = (fe.getComment() == null || fe.getComment().isBlank())
+                        ? "(no comment)" : fe.getComment();
+                String date = fe.getCreatedAt() != null && fe.getCreatedAt().length() >= 10
+                        ? "  [" + fe.getCreatedAt().substring(0, 10) + "]" : "";
+                display.add(stars + "   " + who + "   —   " + comment + date);
+            }
+            feedbackListView.setItems(FXCollections.observableArrayList(display));
         } catch (SQLException ex) {
-            feedbackListView.setItems(
-                FXCollections.observableArrayList(
-                    "Could not load feedback."));
+            ex.printStackTrace();
+            feedbackListView.setItems(FXCollections.observableArrayList(
+                    "Could not load feedback: " + ex.getMessage()));
         }
     }
 

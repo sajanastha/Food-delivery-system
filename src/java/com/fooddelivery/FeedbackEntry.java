@@ -8,6 +8,7 @@ public class FeedbackEntry {
     private int rating;
     private String comment;
     private String createdAt;
+    private String customerName; // populated by JOIN queries in FeedbackDAO
 
     public int getFeedbackID() {
         return feedbackID;
@@ -63,5 +64,13 @@ public class FeedbackEntry {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getCustomerName() {
+        return customerName != null ? customerName : "";
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 }

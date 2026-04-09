@@ -6,19 +6,40 @@ public class DatabaseManager {
     private static DatabaseManager instance;
     private Connection connection;
 
-    private static final String DB_URL  =
-            "jdbc:mysql://localhost:3306/food_delivery";
+    private static final String DB_URL  = "jdbc:mysql://localhost:3306/food_delivery";
     private static final String DB_USER = "root";
     private static final String DB_PASS = "sajana123456789";
 
-    private DatabaseManager() { connect(); createTables(); }
+    private DatabaseManager() {
+        connect();
+        createTables();
+    }
 
     public static synchronized DatabaseManager getInstance() {
         if (instance == null) instance = new DatabaseManager();
         return instance;
     }
 
-    public Connection getConnection() { return connection; }
+    /** Always returns a valid, open connection. Reconnects automatically if closed. */
+    public synchronized Connection getConnection() {
+        try {
+            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
+                System.out.println("DB: reconnecting...");
+                connect();
+            }
+        } catch (SQLException e) {
+            System.err.println("DB: connection check failed, reconnecting: " + e.getMessage());
+            connect();
+        }
+        return connection;
+    }
+
+    /** Opens a brand-new independent connection for use in a single DAO operation.
+     *  Caller is responsible for closing it. Used by FeedbackDAO to avoid
+     *  shared-connection autoCommit conflicts with OrderDAO transactions. */
+    public Connection newConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+    }
 
     public void closeConnection() {
         try {
@@ -29,17 +50,18 @@ public class DatabaseManager {
 
     private void connect() {
         try {
-            connection = DriverManager.getConnection(
-                    DB_URL, DB_USER, DB_PASS);
+            if (connection != null && !connection.isClosed()) connection.close();
+        } catch (SQLException ignored) {}
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
             System.out.println("Database connected.");
         } catch (SQLException e) {
-            System.err.println("DB failed: " + e.getMessage());
+            System.err.println("DB connection failed: " + e.getMessage());
         }
     }
 
     private void createTables() {
         try (Statement s = connection.createStatement()) {
-
             s.execute("CREATE TABLE IF NOT EXISTS users ("
                 + "userID INT PRIMARY KEY AUTO_INCREMENT,"
                 + "email VARCHAR(255) NOT NULL UNIQUE,"
@@ -58,8 +80,7 @@ public class DatabaseManager {
                 + "cuisineType VARCHAR(100),"
                 + "rating DOUBLE DEFAULT 0.0,"
                 + "operatingHours VARCHAR(100),"
-                + "FOREIGN KEY (ownerUserID)"
-                + "  REFERENCES users(userID)"
+                + "FOREIGN KEY (ownerUserID) REFERENCES users(userID)"
                 + ") ENGINE=InnoDB");
 
             s.execute("CREATE TABLE IF NOT EXISTS menu_items ("
@@ -70,8 +91,7 @@ public class DatabaseManager {
                 + "price DOUBLE NOT NULL,"
                 + "category VARCHAR(100),"
                 + "isAvailable TINYINT(1) DEFAULT 1,"
-                + "FOREIGN KEY (restaurantID)"
-                + "  REFERENCES restaurants(restaurantID)"
+                + "FOREIGN KEY (restaurantID) REFERENCES restaurants(restaurantID)"
                 + ") ENGINE=InnoDB");
 
             s.execute("CREATE TABLE IF NOT EXISTS orders ("
@@ -83,10 +103,8 @@ public class DatabaseManager {
                 + "deliveryAddress VARCHAR(500),"
                 + "status VARCHAR(50) DEFAULT 'PENDING',"
                 + "orderTime VARCHAR(50),"
-                + "FOREIGN KEY (customerID)"
-                + "  REFERENCES users(userID),"
-                + "FOREIGN KEY (restaurantID)"
-                + "  REFERENCES restaurants(restaurantID)"
+                + "FOREIGN KEY (customerID) REFERENCES users(userID),"
+                + "FOREIGN KEY (restaurantID) REFERENCES restaurants(restaurantID)"
                 + ") ENGINE=InnoDB");
 
             s.execute("CREATE TABLE IF NOT EXISTS order_items ("
@@ -96,13 +114,11 @@ public class DatabaseManager {
                 + "itemName VARCHAR(255) NOT NULL,"
                 + "itemPrice DOUBLE NOT NULL,"
                 + "quantity INT DEFAULT 1,"
-                + "FOREIGN KEY (orderID)"
-                + "  REFERENCES orders(orderID),"
-                + "FOREIGN KEY (menuItemID)"
-                + "  REFERENCES menu_items(itemID)"
+                + "FOREIGN KEY (orderID) REFERENCES orders(orderID),"
+                + "FOREIGN KEY (menuItemID) REFERENCES menu_items(itemID)"
                 + ") ENGINE=InnoDB");
 
-            // Feedbacks table for customer reviews
+            // orderItemID column stores the orderID (naming kept for backwards compat)
             s.execute("CREATE TABLE IF NOT EXISTS feedbacks ("
                 + "feedbackID INT PRIMARY KEY AUTO_INCREMENT,"
                 + "customerID INT NOT NULL,"
@@ -111,10 +127,8 @@ public class DatabaseManager {
                 + "rating INT DEFAULT 5,"
                 + "comment TEXT,"
                 + "createdAt VARCHAR(50),"
-                + "FOREIGN KEY (customerID)"
-                + "  REFERENCES users(userID),"
-                + "FOREIGN KEY (restaurantID)"
-                + "  REFERENCES restaurants(restaurantID)"
+                + "FOREIGN KEY (customerID) REFERENCES users(userID),"
+                + "FOREIGN KEY (restaurantID) REFERENCES restaurants(restaurantID)"
                 + ") ENGINE=InnoDB");
 
             System.out.println("All tables ready.");
