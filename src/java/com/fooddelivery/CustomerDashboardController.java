@@ -94,7 +94,7 @@ public class CustomerDashboardController {
     @FXML private Label profileRoleLabel;
 
     @FXML private VBox myFeedbackPanel;
-    @FXML private ListView<String> myFeedbackListView;
+    @FXML private ListView<FeedbackEntry> myFeedbackListView;
     @FXML private Label feedbackCountLabel;
     @FXML private Label myFeedbackStatus;
 
@@ -204,34 +204,29 @@ public class CustomerDashboardController {
     }
 
     private void loadMyFeedback() {
+        // Install card-style cell factory once
+        myFeedbackListView.setCellFactory(
+                lv -> new FeedbackCardCell(FeedbackCardCell.Mode.CUSTOMER));
+
         try {
             List<FeedbackEntry> entries = feedbackDAO.getByCustomer(me.getUserID());
             if (entries.isEmpty()) {
-                myFeedbackListView.setItems(FXCollections.observableArrayList(
-                        "You haven't submitted any feedback yet."));
+                myFeedbackListView.setItems(FXCollections.observableArrayList());
                 feedbackCountLabel.setText("0 feedback(s)");
-                myFeedbackStatus.setText("");
+                myFeedbackStatus.setText("You haven't submitted any feedback yet.");
                 return;
             }
-            List<String> display = new ArrayList<>();
+            // Enrich each entry: reuse customerName field to carry restaurant name
             for (FeedbackEntry e : entries) {
-                String stars = "★".repeat(e.getRating()) + "☆".repeat(5 - e.getRating());
                 String restName = getRestaurantName(e.getRestaurantID());
-                String comment = (e.getComment() == null || e.getComment().isBlank())
-                        ? "(no comment)" : e.getComment();
-                String date = e.getCreatedAt() != null && e.getCreatedAt().length() >= 10
-                        ? e.getCreatedAt().substring(0, 10) : "";
-                display.add(stars + "  " + restName
-                        + "  |  Order #" + e.getOrderItemID()
-                        + "  |  " + comment
-                        + (date.isEmpty() ? "" : "  [" + date + "]"));
+                e.setCustomerName(restName.isBlank() ? "Restaurant #" + e.getRestaurantID() : restName);
             }
-            myFeedbackListView.setItems(FXCollections.observableArrayList(display));
+            myFeedbackListView.setItems(FXCollections.observableArrayList(entries));
             feedbackCountLabel.setText(entries.size() + " feedback(s)");
             myFeedbackStatus.setText("");
         } catch (SQLException ex) {
-            myFeedbackListView.setItems(FXCollections.observableArrayList("Could not load feedback."));
-            myFeedbackStatus.setText("Error loading feedback.");
+            myFeedbackListView.setItems(FXCollections.observableArrayList());
+            myFeedbackStatus.setText("Error loading feedback: " + ex.getMessage());
         }
     }
 

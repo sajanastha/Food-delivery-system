@@ -60,7 +60,7 @@ public class RestaurantDashboardController {
     @FXML private TextArea reportArea;
 
     // Feedback panel
-    @FXML private ListView<String> feedbackListView;
+    @FXML private ListView<FeedbackEntry> feedbackListView;
 
     // Content panels (for manual switching)
     @FXML private VBox menuPanel;
@@ -517,33 +517,19 @@ public class RestaurantDashboardController {
 
     private void loadFeedbackList() {
         if (myRestaurant == null) return;
+        feedbackListView.setCellFactory(
+                lv -> new FeedbackCardCell(FeedbackCardCell.Mode.RECEIVED));
         try {
             List<FeedbackEntry> entries =
                     feedbackDAO.getByRestaurant(myRestaurant.getRestaurantID());
             if (entries.isEmpty()) {
-                feedbackListView.setItems(FXCollections.observableArrayList(
-                        "No feedback received yet. "
-                        + "Feedback will appear here after customers rate their orders."));
+                feedbackListView.setItems(FXCollections.observableArrayList());
                 return;
             }
-            List<String> display = new ArrayList<>();
-            for (FeedbackEntry fe : entries) {
-                String stars = "★".repeat(fe.getRating())
-                        + "☆".repeat(5 - fe.getRating());
-                String who = fe.getCustomerName().isBlank()
-                        ? "Customer #" + fe.getCustomerID()
-                        : fe.getCustomerName();
-                String comment = (fe.getComment() == null || fe.getComment().isBlank())
-                        ? "(no comment)" : fe.getComment();
-                String date = fe.getCreatedAt() != null && fe.getCreatedAt().length() >= 10
-                        ? "  [" + fe.getCreatedAt().substring(0, 10) + "]" : "";
-                display.add(stars + "   " + who + "   —   " + comment + date);
-            }
-            feedbackListView.setItems(FXCollections.observableArrayList(display));
+            feedbackListView.setItems(FXCollections.observableArrayList(entries));
         } catch (SQLException ex) {
             ex.printStackTrace();
-            feedbackListView.setItems(FXCollections.observableArrayList(
-                    "Could not load feedback: " + ex.getMessage()));
+            feedbackListView.setItems(FXCollections.observableArrayList());
         }
     }
 

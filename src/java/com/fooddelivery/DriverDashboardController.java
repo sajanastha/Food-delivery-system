@@ -54,7 +54,7 @@ public class DriverDashboardController {
     @FXML private VBox driverHistoryPanel;
     @FXML private VBox driverProfilePanel;
     @FXML private VBox driverFeedbackPanel;
-    @FXML private ListView<String> driverFeedbackListView;
+    @FXML private ListView<FeedbackEntry> driverFeedbackListView;
     @FXML private Label driverFeedbackCountLabel;
     @FXML private Label driverFeedbackStatus;
 
@@ -155,37 +155,23 @@ public class DriverDashboardController {
     @FXML public void goFeedback(ActionEvent e) { showPanel("feedback"); }
 
     private void loadDriverFeedback() {
+        driverFeedbackListView.setCellFactory(
+                lv -> new FeedbackCardCell(FeedbackCardCell.Mode.RECEIVED));
         try {
             List<FeedbackEntry> entries = feedbackDAO.getByDriver(me.getUserID());
             if (entries.isEmpty()) {
-                driverFeedbackListView.setItems(FXCollections.observableArrayList(
-                        "No feedback received yet. Feedback appears here after customers rate delivered orders."));
+                driverFeedbackListView.setItems(FXCollections.observableArrayList());
                 driverFeedbackCountLabel.setText("0 feedback(s)");
-                driverFeedbackStatus.setText("");
+                driverFeedbackStatus.setText("No feedback received yet. Feedback appears here after customers rate delivered orders.");
                 return;
             }
-            List<String> display = new ArrayList<>();
-            for (FeedbackEntry fe : entries) {
-                String stars = "★".repeat(fe.getRating()) + "☆".repeat(5 - fe.getRating());
-                String who = fe.getCustomerName().isBlank()
-                        ? "Customer #" + fe.getCustomerID()
-                        : fe.getCustomerName();
-                String comment = (fe.getComment() == null || fe.getComment().isBlank())
-                        ? "(no comment)" : fe.getComment();
-                String date = fe.getCreatedAt() != null && fe.getCreatedAt().length() >= 10
-                        ? "  [" + fe.getCreatedAt().substring(0, 10) + "]" : "";
-                display.add(stars + "  " + who
-                        + "  |  Order #" + fe.getOrderItemID()
-                        + "  |  " + comment + date);
-            }
-            driverFeedbackListView.setItems(FXCollections.observableArrayList(display));
+            driverFeedbackListView.setItems(FXCollections.observableArrayList(entries));
             driverFeedbackCountLabel.setText(entries.size() + " feedback(s)");
             driverFeedbackStatus.setText("");
         } catch (SQLException ex) {
             ex.printStackTrace();
-            driverFeedbackListView.setItems(FXCollections.observableArrayList(
-                    "Could not load feedback: " + ex.getMessage()));
-            driverFeedbackStatus.setText("Error loading feedback.");
+            driverFeedbackListView.setItems(FXCollections.observableArrayList());
+            driverFeedbackStatus.setText("Could not load feedback: " + ex.getMessage());
         }
     }
 
