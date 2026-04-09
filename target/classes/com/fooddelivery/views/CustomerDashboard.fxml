@@ -22,16 +22,6 @@
                    style="-fx-text-fill: rgba(255,255,255,0.88);
                           -fx-font-size: 13px;"/>
             <Pane HBox.hgrow="ALWAYS"/>
-            <Button text="Logout"
-                    onAction="#handleLogout"
-                    style="-fx-background-color: rgba(255,255,255,0.18);
-                           -fx-text-fill: white;
-                           -fx-border-color: rgba(255,255,255,0.5);
-                           -fx-border-radius: 8;
-                           -fx-background-radius: 8;
-                           -fx-font-size: 12px;
-                           -fx-padding: 6 16;
-                           -fx-cursor: hand;"/>
         </HBox>
     </top>
 
@@ -387,6 +377,17 @@
                                style="-fx-font-size: 12px;
                                       -fx-text-fill: #4d9078;
                                       -fx-font-weight: bold;"/>
+                        <HBox alignment="CENTER_RIGHT">
+                            <Button text="Logout"
+                                    onAction="#handleLogout"
+                                    style="-fx-background-color: #FF7518;
+                                           -fx-text-fill: white;
+                                           -fx-font-weight: bold;
+                                           -fx-background-radius: 10;
+                                           -fx-font-size: 13px;
+                                           -fx-padding: 10 18;
+                                           -fx-cursor: hand;"/>
+                        </HBox>
                     </VBox>
                 </VBox>
             </VBox>
