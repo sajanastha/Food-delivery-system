@@ -7,6 +7,8 @@ import java.util.List;
 
 public class FeedbackDAO {
 
+    private static final int HIDDEN_ORDER_ITEM_ID = 40;
+
     /** Always gets a fresh independent connection to avoid shared-connection
      *  autoCommit conflicts with OrderDAO transactions. */
     private Connection getConn() throws SQLException {
@@ -15,11 +17,13 @@ public class FeedbackDAO {
 
     /** Get feedback for a specific customer + order. */
     public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
-        String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? "
+                + "AND orderItemID=? AND orderItemID != ?";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
             ps.setInt(2, orderID);
+            ps.setInt(3, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
@@ -30,10 +34,12 @@ public class FeedbackDAO {
     /** All feedback submitted by a customer. */
     public List<FeedbackEntry> getByCustomer(int customerID) throws SQLException {
         List<FeedbackEntry> list = new ArrayList<>();
-        String sql = "SELECT * FROM feedbacks WHERE customerID=? ORDER BY createdAt DESC";
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? "
+                + "AND orderItemID != ? ORDER BY createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
+            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(map(rs));
             }
@@ -47,10 +53,12 @@ public class FeedbackDAO {
         String sql = "SELECT f.*, u.fullName AS customerName "
                 + "FROM feedbacks f "
                 + "JOIN users u ON f.customerID = u.userID "
-                + "WHERE f.restaurantID = ? ORDER BY f.createdAt DESC";
+                + "WHERE f.restaurantID = ? "
+                + "AND f.orderItemID != ? ORDER BY f.createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restaurantID);
+            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     FeedbackEntry e = map(rs);
@@ -69,10 +77,12 @@ public class FeedbackDAO {
                 + "FROM feedbacks f "
                 + "JOIN orders o ON f.orderItemID = o.orderID "
                 + "JOIN users u ON f.customerID = u.userID "
-                + "WHERE o.driverID = ? ORDER BY f.createdAt DESC";
+                + "WHERE o.driverID = ? "
+                + "AND f.orderItemID != ? ORDER BY f.createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, driverID);
+            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     FeedbackEntry e = map(rs);

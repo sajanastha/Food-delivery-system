@@ -9,7 +9,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-
 public class FeedbackCardCell extends ListCell<FeedbackEntry> {
 
     public enum Mode {
@@ -152,9 +151,8 @@ public class FeedbackCardCell extends ListCell<FeedbackEntry> {
             String who = entry.getCustomerName().isBlank()
                     ? "Customer #" + entry.getCustomerID()
                     : entry.getCustomerName();
-            subLabel.setText("For customer:");
-            subLabel.setVisible(true);
-            subLabel.setManaged(true);
+            subLabel.setVisible(false);
+            subLabel.setManaged(false);
 
             nameLabel.setText(who);
             avatarLabel.setText(initials(who));
