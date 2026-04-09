@@ -132,13 +132,10 @@ public class FeedbackCardCell extends ListCell<FeedbackEntry> {
         commentLabel.setText(comment);
 
         if (mode == Mode.CUSTOMER) {
-            // Customer sees their own review → show "For restaurant / order"
-            subLabel.setText("For Order #" + entry.getOrderItemID());
-            subLabel.setVisible(true);
-            subLabel.setManaged(true);
+            // Customer sees their own review → do not show order metadata in the card.
+            subLabel.setVisible(false);
+            subLabel.setManaged(false);
 
-            // Use restaurant ID as display name (the controller may enrich this
-            // by storing restaurant name in customerName field via a helper)
             String who = entry.getCustomerName().isBlank()
                     ? "Restaurant #" + entry.getRestaurantID()
                     : entry.getCustomerName(); // customerName reused to carry rest name
