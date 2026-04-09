@@ -56,8 +56,10 @@ public class RestaurantDashboardController {
 
     // Orders panel
     @FXML private ListView<String> orderListView;
+    @FXML private ListView<String> ongoingOrderListView;
     @FXML private TextArea orderDetailArea;
     @FXML private Label orderStatus;
+    @FXML private Label ongoingStatus;
 
     // Reports panel
     @FXML private VBox reportCardBox;
@@ -83,8 +85,9 @@ public class RestaurantDashboardController {
     private final FeedbackDAO   feedbackDAO   = new FeedbackDAO();
 
     private Restaurant      myRestaurant;
-    private List<MenuItem>  menuItems = new ArrayList<>();
-    private List<Order>     orders    = new ArrayList<>();
+    private List<MenuItem>  menuItems     = new ArrayList<>();
+    private List<Order>     orders        = new ArrayList<>(); // incoming (PENDING/CONFIRMED waiting for driver)
+    private List<Order>     ongoingOrders = new ArrayList<>(); // IN_DELIVERY
 
     @FXML
     public void initialize() {
@@ -380,16 +383,51 @@ public class RestaurantDashboardController {
 
     // ── Orders ───────────────────────────────────────────────────
     private void loadOrders() throws SQLException {
-        orders = orderDAO.getByRestaurant(
+        List<Order> all = orderDAO.getByRestaurant(
                 myRestaurant.getRestaurantID());
-        List<String> display = new ArrayList<>();
+
+        // Preparing = PENDING or CONFIRMED
+        // Ongoing   = IN_DELIVERY
+        orders        = new ArrayList<>();
+        ongoingOrders = new ArrayList<>();
+
+        for (Order o : all) {
+            if (o.getStatus() == OrderStatus.IN_DELIVERY) {
+                ongoingOrders.add(o);
+            } else if (o.getStatus() == OrderStatus.PENDING
+                    || o.getStatus() == OrderStatus.CONFIRMED) {
+                orders.add(o);
+            }
+            // DELIVERED and CANCELLED are history — not shown here
+        }
+
+        // Populate preparing list
+        List<String> incomingDisplay = new ArrayList<>();
         for (Order o : orders)
-            display.add("Order #" + o.getOrderID()
-                    + "   " + o.getStatus()
-                    + "   NPR "
-                    + String.format("%.2f", o.getTotalAmount()));
+            incomingDisplay.add("Order #" + o.getOrderID()
+                    + "  " + o.getStatus()
+                    + "  NPR " + String.format("%.2f", o.getTotalAmount()));
         orderListView.setItems(
-            FXCollections.observableArrayList(display));
+            FXCollections.observableArrayList(incomingDisplay));
+
+        // Populate ongoing list
+        List<String> ongoingDisplay = new ArrayList<>();
+        for (Order o : ongoingOrders)
+            ongoingDisplay.add("Order #" + o.getOrderID()
+                    + "  🚚  NPR " + String.format("%.2f", o.getTotalAmount()));
+        ongoingOrderListView.setItems(
+            FXCollections.observableArrayList(ongoingDisplay));
+
+        if (orders.isEmpty()) {
+            orderStatus.setText("No orders currently waiting to be prepared.");
+        } else {
+            orderStatus.setText(orders.size() + " order(s) preparing.");
+        }
+
+        if (ongoingOrders.isEmpty())
+            ongoingStatus.setText("No orders currently out for delivery.");
+        else
+            ongoingStatus.setText(ongoingOrders.size() + " order(s) in delivery.");
     }
 
     private void loadOrdersSafe() {
@@ -401,17 +439,43 @@ public class RestaurantDashboardController {
 
     @FXML
     private void handleOrderSelected() {
-        int idx = orderListView.getSelectionModel()
-                               .getSelectedIndex();
+        int idx = orderListView.getSelectionModel().getSelectedIndex();
         if (idx < 0 || idx >= orders.size()) return;
-        orderDetailArea.setText(
-            orders.get(idx).getOrderSummary());
+        ongoingOrderListView.getSelectionModel().clearSelection(); // deselect other list
+        showOrderDetail(orders.get(idx));
+    }
+
+    @FXML
+    private void handleOngoingOrderSelected() {
+        int idx = ongoingOrderListView.getSelectionModel().getSelectedIndex();
+        if (idx < 0 || idx >= ongoingOrders.size()) return;
+        orderListView.getSelectionModel().clearSelection(); // deselect other list
+        showOrderDetail(ongoingOrders.get(idx));
+    }
+
+    private void showOrderDetail(Order o) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Order #").append(o.getOrderID()).append("\n");
+        sb.append("Status : ").append(o.getStatus()).append("\n");
+        sb.append("Address: ").append(o.getDeliveryAddress()).append("\n");
+        sb.append("Total  : NPR ").append(String.format("%.2f", o.getTotalAmount())).append("\n");
+        sb.append("\nItems:\n");
+        if (o.getItems() == null || o.getItems().isEmpty()) {
+            sb.append("  (no items loaded)");
+        } else {
+            for (var item : o.getItems())
+                sb.append("  • ").append(item.getItemName())
+                  .append(" x").append(item.getQuantity())
+                  .append("  NPR ").append(String.format("%.2f", item.getSubtotal()))
+                  .append("\n");
+        }
+        orderDetailArea.setText(sb.toString());
     }
 
     @FXML
     private void handleConfirm(ActionEvent e) {
-        updateOrderStatus(OrderStatus.CONFIRMED,
-            "Order confirmed.");
+        updateOrderStatus(OrderStatus.IN_DELIVERY,
+            "Order is now out for delivery.");
     }
 
     @FXML
@@ -427,16 +491,15 @@ public class RestaurantDashboardController {
     }
 
     private void updateOrderStatus(OrderStatus s, String msg) {
-        int idx = orderListView.getSelectionModel()
-                               .getSelectedIndex();
-        if (idx < 0) {
-            orderStatus.setText("Select an order first.");
+        int idx = orderListView.getSelectionModel().getSelectedIndex();
+        if (idx < 0 || idx >= orders.size()) {
+            orderStatus.setText("Select a preparing order first.");
             return;
         }
         try {
-            orderDAO.updateStatus(
-                orders.get(idx).getOrderID(), s);
+            orderDAO.updateStatus(orders.get(idx).getOrderID(), s);
             orderStatus.setText(msg);
+            orderDetailArea.clear();
             loadOrders();
         } catch (SQLException e) {
             orderStatus.setText("Error updating status.");

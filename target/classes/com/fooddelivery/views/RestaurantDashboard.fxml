@@ -170,62 +170,69 @@
             </VBox>
 
             <!-- ORDERS PANEL -->
-            <VBox fx:id="ordersPanel" spacing="14"
+            <VBox fx:id="ordersPanel" spacing="12"
                   visible="false" managed="false"
-                  style="-fx-padding: 18;">
+                  style="-fx-padding: 16;">
+
+                <!-- Header row -->
                 <HBox alignment="CENTER_LEFT">
-                    <VBox spacing="3">
-                        <Label text="Incoming Orders"
+                    <VBox spacing="3" HBox.hgrow="ALWAYS">
+                        <Label text="Orders"
                                style="-fx-font-size: 18px;
                                       -fx-font-weight: bold;
                                       -fx-text-fill: #2D2D2D;"/>
-                        <Label text="Confirm or cancel customer orders."
-                               style="-fx-font-size: 12px;
+                        <Label text="Preparing on the left · Details in the middle · Ongoing on the right."
+                               style="-fx-font-size: 11px;
                                       -fx-text-fill: #7a7a5a;"/>
                     </VBox>
-                    <Pane HBox.hgrow="ALWAYS"/>
-                    <Button text="Refresh"
+                    <Button text="⟳  Refresh"
                             onAction="#handleRefreshOrders"
                             style="-fx-background-color: #e8e8c8;
                                    -fx-text-fill: #555;
                                    -fx-background-radius: 8;
-                                   -fx-padding: 8 18;
+                                   -fx-padding: 7 16;
                                    -fx-font-size: 12px;
                                    -fx-cursor: hand;"/>
                 </HBox>
 
-                <HBox spacing="14" VBox.vgrow="ALWAYS">
-                    <VBox spacing="10" prefWidth="380"
+                <!-- Three-column body -->
+                <HBox spacing="12" VBox.vgrow="ALWAYS">
+
+                    <!-- LEFT: Preparing Orders -->
+                    <VBox spacing="8" prefWidth="300"
                           style="-fx-background-color: white;
                                  -fx-background-radius: 12;
-                                 -fx-padding: 16;
+                                 -fx-padding: 14;
                                  -fx-border-color: #d8d8b8;
                                  -fx-border-radius: 12;
                                  -fx-border-width: 1;">
-                        <Label text="Orders"
-                               style="-fx-font-size: 13px;
-                                      -fx-font-weight: bold;
-                                      -fx-text-fill: #2D2D2D;"/>
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Label text="🍳"
+                                   style="-fx-font-size: 14px;"/>
+                            <Label text="Preparing"
+                                   style="-fx-font-size: 13px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1A6B44;"/>
+                        </HBox>
                         <ListView fx:id="orderListView"
                                   VBox.vgrow="ALWAYS"
-                                  prefHeight="300"
                                   onMouseClicked="#handleOrderSelected"
                                   style="-fx-border-color: #e8e8c8;
                                          -fx-border-radius: 8;
-                                         -fx-font-size: 13px;"/>
+                                         -fx-font-size: 12px;"/>
                         <HBox spacing="8">
-                            <Button text="✔ Confirm"
+                            <Button text="✔  Done"
                                     onAction="#handleConfirm"
                                     HBox.hgrow="ALWAYS"
                                     maxWidth="Infinity"
                                     style="-fx-background-color: #4d9078;
                                            -fx-text-fill: white;
                                            -fx-background-radius: 7;
-                                           -fx-font-size: 13px;
+                                           -fx-font-size: 12px;
                                            -fx-font-weight: bold;
-                                           -fx-padding: 9 0;
+                                           -fx-padding: 8 0;
                                            -fx-cursor: hand;"/>
-                            <Button text="✗ Cancel"
+                            <Button text="✗  Cancel"
                                     onAction="#handleCancel"
                                     HBox.hgrow="ALWAYS"
                                     maxWidth="Infinity"
@@ -234,9 +241,9 @@
                                            -fx-border-color: #FF7518;
                                            -fx-border-radius: 7;
                                            -fx-background-radius: 7;
-                                           -fx-font-size: 13px;
+                                           -fx-font-size: 12px;
                                            -fx-font-weight: bold;
-                                           -fx-padding: 9 0;
+                                           -fx-padding: 8 0;
                                            -fx-cursor: hand;"/>
                         </HBox>
                         <Label fx:id="orderStatus"
@@ -245,26 +252,63 @@
                                       -fx-text-fill: #7a7a5a;"/>
                     </VBox>
 
-                    <VBox spacing="10" HBox.hgrow="ALWAYS"
+                    <!-- MIDDLE: Order Details (narrow) -->
+                    <VBox spacing="8" prefWidth="200"
                           style="-fx-background-color: white;
                                  -fx-background-radius: 12;
-                                 -fx-padding: 16;
+                                 -fx-padding: 14;
                                  -fx-border-color: #d8d8b8;
                                  -fx-border-radius: 12;
                                  -fx-border-width: 1;">
-                        <Label text="Order Details"
-                               style="-fx-font-size: 13px;
-                                      -fx-font-weight: bold;
-                                      -fx-text-fill: #2D2D2D;"/>
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Label text="🧾"
+                                   style="-fx-font-size: 14px;"/>
+                            <Label text="Order Details"
+                                   style="-fx-font-size: 13px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #2D2D2D;"/>
+                        </HBox>
                         <TextArea fx:id="orderDetailArea"
                                   VBox.vgrow="ALWAYS"
                                   editable="false"
-                                  promptText="Click an order to see details..."
+                                  promptText="Click any order to see details..."
                                   style="-fx-font-family: Consolas;
-                                         -fx-font-size: 12px;
+                                         -fx-font-size: 11px;
                                          -fx-border-color: #e8e8c8;
-                                         -fx-border-radius: 8;"/>
+                                         -fx-border-radius: 8;
+                                         -fx-background-radius: 8;"/>
                     </VBox>
+
+                    <!-- RIGHT: Ongoing Orders (fills remaining space) -->
+                    <VBox spacing="8"
+                          HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: white;
+                                 -fx-background-radius: 12;
+                                 -fx-padding: 14;
+                                 -fx-border-color: #d8d8b8;
+                                 -fx-border-radius: 12;
+                                 -fx-border-width: 1;">
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Label text="🚚"
+                                   style="-fx-font-size: 14px;"/>
+                            <Label text="Ongoing"
+                                   style="-fx-font-size: 13px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #CC6600;"/>
+                        </HBox>
+                        <ListView fx:id="ongoingOrderListView"
+                                  VBox.vgrow="ALWAYS"
+                                  onMouseClicked="#handleOngoingOrderSelected"
+                                  style="-fx-border-color: #e8e8c8;
+                                         -fx-border-radius: 8;
+                                         -fx-font-size: 12px;"/>
+                        <Label fx:id="ongoingStatus"
+                               text="Orders confirmed and out for delivery"
+                               wrapText="true"
+                               style="-fx-font-size: 11px;
+                                      -fx-text-fill: #7a7a5a;"/>
+                    </VBox>
+
                 </HBox>
             </VBox>
 

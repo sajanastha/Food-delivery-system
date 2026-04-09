@@ -15,13 +15,11 @@ public class FeedbackDAO {
 
     /** Get feedback for a specific customer + order. */
     public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
-        int orderItemID = getFirstOrderItemID(orderID);
-        if (orderItemID == -1) return null;
         String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
-            ps.setInt(2, orderItemID);
+            ps.setInt(2, orderID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
@@ -89,12 +87,8 @@ public class FeedbackDAO {
     /** Insert or update feedback for a given order. */
     public void saveOrUpdate(int customerID, int restaurantID,
             int orderID, int rating, String comment) throws SQLException {
-        // Get the first orderItemID from this order
-        int orderItemID = getFirstOrderItemID(orderID);
-        if (orderItemID == -1) {
-            throw new SQLException("No order items found for order ID: " + orderID);
-        }
-        
+        int orderItemID = orderID; // feedbacks.orderItemID stores the orderID
+
         try (Connection conn = getConn()) {
             // Try UPDATE first
             String updateSql = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
@@ -155,13 +149,11 @@ public class FeedbackDAO {
     /** Get driver-specific feedback for a customer+order (driverID > 0). */
     public FeedbackEntry getDriverFeedbackByCustomerAndOrder(
             int customerID, int orderID) throws SQLException {
-        int orderItemID = getFirstOrderItemID(orderID);
-        if (orderItemID == -1) return null;
         String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=? AND driverID>0";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
-            ps.setInt(2, orderItemID);
+            ps.setInt(2, orderID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
@@ -172,8 +164,7 @@ public class FeedbackDAO {
     /** Save or update driver-specific feedback. */
     public void saveOrUpdateDriverFeedback(int customerID, int driverID,
             int orderID, int rating, String comment) throws SQLException {
-        int orderItemID = getFirstOrderItemID(orderID);
-        if (orderItemID == -1) throw new SQLException("No order items for orderID: " + orderID);
+        int orderItemID = orderID; // feedbacks.orderItemID stores the orderID
         try (Connection conn = getConn()) {
             String upd = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
                     + "WHERE customerID=? AND driverID=? AND orderItemID=?";
