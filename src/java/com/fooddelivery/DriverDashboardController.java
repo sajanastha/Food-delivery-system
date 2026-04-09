@@ -14,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
@@ -33,9 +34,15 @@ public class DriverDashboardController {
     @FXML private TextArea         requestDetailArea;
     @FXML private Label            requestStatus;
 
-    @FXML private ListView<String> activeDeliveryListView;
-    @FXML private TextArea         activeDetailArea;
-    @FXML private Label            activeStatus;
+    // Active delivery card fields
+    @FXML private VBox  noActiveBox;
+    @FXML private VBox  activeDeliveryCard;
+    @FXML private Label activeOrderBadge;
+    @FXML private Label activeAddressLabel;
+    @FXML private Label activeRestaurantLabel;
+    @FXML private Label activeItemsLabel;
+    @FXML private Label activeTotalLabel;
+    @FXML private Label activeStatus;
 
     @FXML private ListView<String> historyListView;
     @FXML private TextArea         historyDetailArea;
@@ -155,19 +162,34 @@ public class DriverDashboardController {
     @FXML public void goFeedback(ActionEvent e) { showPanel("feedback"); }
 
     private void loadDriverFeedback() {
+        loadDriverFeedback(null);
+    }
+
+    public void loadDriverFeedback(Integer highlightOrderID) {
         driverFeedbackListView.setCellFactory(
                 lv -> new FeedbackCardCell(FeedbackCardCell.Mode.RECEIVED));
         try {
-            List<FeedbackEntry> entries = feedbackDAO.getByDriver(me.getUserID());
+            List<FeedbackEntry> entries = feedbackDAO.getDriverFeedbackByDriver(me.getUserID());
             if (entries.isEmpty()) {
                 driverFeedbackListView.setItems(FXCollections.observableArrayList());
                 driverFeedbackCountLabel.setText("0 feedback(s)");
-                driverFeedbackStatus.setText("No feedback received yet. Feedback appears here after customers rate delivered orders.");
+                driverFeedbackStatus.setText("No feedback received yet.");
                 return;
             }
-            driverFeedbackListView.setItems(FXCollections.observableArrayList(entries));
+            // If a specific order is highlighted, filter to just that one
+            List<FeedbackEntry> toShow = entries;
+            if (highlightOrderID != null) {
+                toShow = new ArrayList<>();
+                for (FeedbackEntry e : entries)
+                    if (e.getOrderItemID() == highlightOrderID) toShow.add(e);
+                driverFeedbackStatus.setText(
+                    "Showing feedback for Order #" + highlightOrderID
+                    + " — click Feedback tab again to see all.");
+            } else {
+                driverFeedbackStatus.setText("");
+            }
+            driverFeedbackListView.setItems(FXCollections.observableArrayList(toShow));
             driverFeedbackCountLabel.setText(entries.size() + " feedback(s)");
-            driverFeedbackStatus.setText("");
         } catch (SQLException ex) {
             ex.printStackTrace();
             driverFeedbackListView.setItems(FXCollections.observableArrayList());
@@ -237,13 +259,36 @@ public class DriverDashboardController {
             List<Order> all = orderDAO.getByDriverAndStatus(
                     me.getUserID(), OrderStatus.IN_DELIVERY);
             activeDeliveries = all;
-
-            List<String> display = new ArrayList<>();
-            for (Order o : all)
-                display.add("Order #" + o.getOrderID()
-                    + "  →  " + o.getDeliveryAddress());
-            activeDeliveryListView.setItems(
-                FXCollections.observableArrayList(display));
+            if (all.isEmpty()) {
+                noActiveBox.setVisible(true);
+                noActiveBox.setManaged(true);
+                activeDeliveryCard.setVisible(false);
+                activeDeliveryCard.setManaged(false);
+            } else {
+                Order o = all.get(0);
+                noActiveBox.setVisible(false);
+                noActiveBox.setManaged(false);
+                activeDeliveryCard.setVisible(true);
+                activeDeliveryCard.setManaged(true);
+                activeOrderBadge.setText("Order #" + o.getOrderID());
+                activeAddressLabel.setText(o.getDeliveryAddress());
+                // Restaurant name
+                try {
+                    Restaurant rest = restaurantDAO.getById(o.getRestaurantID());
+                    activeRestaurantLabel.setText(rest != null ? rest.getRestaurantName()
+                            : "Restaurant #" + o.getRestaurantID());
+                } catch (SQLException ex2) {
+                    activeRestaurantLabel.setText("Restaurant #" + o.getRestaurantID());
+                }
+                // Items
+                StringBuilder items = new StringBuilder();
+                for (OrderItem item : o.getItems()) {
+                    if (items.length() > 0) items.append("  •  ");
+                    items.append(item.getItemName()).append(" x").append(item.getQuantity());
+                }
+                activeItemsLabel.setText(items.length() == 0 ? "No items" : items.toString());
+                activeTotalLabel.setText("NPR " + String.format("%.2f", o.getTotalAmount()));
+            }
         } catch (SQLException ex) {
             activeStatus.setText("Error loading active deliveries.");
         }
@@ -344,31 +389,22 @@ public class DriverDashboardController {
     // ── Active delivery actions ───────────────────────────────────────────────
     @FXML
     private void handleActiveSelected() {
-        int idx = activeDeliveryListView.getSelectionModel()
-                                         .getSelectedIndex();
-        if (idx < 0 || idx >= activeDeliveries.size()) return;
-        activeDetailArea.setText(
-            activeDeliveries.get(idx).getOrderSummary());
+        // No-op: active delivery is shown as a single card, no list selection needed
     }
 
     @FXML
     private void handleMarkDelivered(ActionEvent e) {
-        int idx = activeDeliveryListView.getSelectionModel()
-                                         .getSelectedIndex();
-        if (idx < 0) {
-            activeStatus.setText("Select a delivery first.");
+        if (activeDeliveries.isEmpty()) {
+            activeStatus.setText("No active delivery.");
             return;
         }
-        Order o = activeDeliveries.get(idx);
+        Order o = activeDeliveries.get(0);
         try {
-            orderDAO.updateStatus(o.getOrderID(),
-                    OrderStatus.DELIVERED);
+            orderDAO.updateStatus(o.getOrderID(), OrderStatus.DELIVERED);
             me.completeDelivery();
-            activeStatus.setText(
-                "✔ Order #" + o.getOrderID() + " delivered!");
+            activeStatus.setText("✔ Delivered!");
             showAlert("Delivered!",
-                "Order #" + o.getOrderID()
-                + " marked as delivered.\nGreat work!");
+                "Order #" + o.getOrderID() + " marked as delivered.\nGreat work!");
             refreshAll();
             showPanel("history");
         } catch (SQLException ex) {
@@ -378,19 +414,15 @@ public class DriverDashboardController {
 
     @FXML
     private void handleCancelDelivery(ActionEvent e) {
-        int idx = activeDeliveryListView.getSelectionModel()
-                                         .getSelectedIndex();
-        if (idx < 0) {
-            activeStatus.setText("Select a delivery first.");
+        if (activeDeliveries.isEmpty()) {
+            activeStatus.setText("No active delivery.");
             return;
         }
-        Order o = activeDeliveries.get(idx);
+        Order o = activeDeliveries.get(0);
         try {
-            orderDAO.updateStatus(o.getOrderID(),
-                    OrderStatus.CANCELLED);
+            orderDAO.updateStatus(o.getOrderID(), OrderStatus.CANCELLED);
             me.completeDelivery();
-            activeStatus.setText(
-                "Order #" + o.getOrderID() + " cancelled.");
+            activeStatus.setText("Order #" + o.getOrderID() + " cancelled.");
             refreshAll();
         } catch (SQLException ex) {
             activeStatus.setText("Error cancelling.");

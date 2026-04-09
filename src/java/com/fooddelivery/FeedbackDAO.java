@@ -7,8 +7,6 @@ import java.util.List;
 
 public class FeedbackDAO {
 
-    private static final int HIDDEN_ORDER_ITEM_ID = 40;
-
     /** Always gets a fresh independent connection to avoid shared-connection
      *  autoCommit conflicts with OrderDAO transactions. */
     private Connection getConn() throws SQLException {
@@ -17,13 +15,11 @@ public class FeedbackDAO {
 
     /** Get feedback for a specific customer + order. */
     public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
-        String sql = "SELECT * FROM feedbacks WHERE customerID=? "
-                + "AND orderItemID=? AND orderItemID != ?";
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
             ps.setInt(2, orderID);
-            ps.setInt(3, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
@@ -34,12 +30,10 @@ public class FeedbackDAO {
     /** All feedback submitted by a customer. */
     public List<FeedbackEntry> getByCustomer(int customerID) throws SQLException {
         List<FeedbackEntry> list = new ArrayList<>();
-        String sql = "SELECT * FROM feedbacks WHERE customerID=? "
-                + "AND orderItemID != ? ORDER BY createdAt DESC";
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? ORDER BY createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
-            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(map(rs));
             }
@@ -53,12 +47,10 @@ public class FeedbackDAO {
         String sql = "SELECT f.*, u.fullName AS customerName "
                 + "FROM feedbacks f "
                 + "JOIN users u ON f.customerID = u.userID "
-                + "WHERE f.restaurantID = ? "
-                + "AND f.orderItemID != ? ORDER BY f.createdAt DESC";
+                + "WHERE f.restaurantID = ? ORDER BY f.createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restaurantID);
-            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     FeedbackEntry e = map(rs);
@@ -77,12 +69,10 @@ public class FeedbackDAO {
                 + "FROM feedbacks f "
                 + "JOIN orders o ON f.orderItemID = o.orderID "
                 + "JOIN users u ON f.customerID = u.userID "
-                + "WHERE o.driverID = ? "
-                + "AND f.orderItemID != ? ORDER BY f.createdAt DESC";
+                + "WHERE o.driverID = ? ORDER BY f.createdAt DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, driverID);
-            ps.setInt(2, HIDDEN_ORDER_ITEM_ID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     FeedbackEntry e = map(rs);
@@ -156,6 +146,69 @@ public class FeedbackDAO {
         e.setRating(rs.getInt("rating"));
         e.setComment(rs.getString("comment"));
         e.setCreatedAt(rs.getString("createdAt"));
+        try { e.setDriverID(rs.getInt("driverID")); } catch (SQLException ignored) {}
         return e;
+    }
+
+    /** Get driver-specific feedback for a customer+order (driverID > 0). */
+    public FeedbackEntry getDriverFeedbackByCustomerAndOrder(
+            int customerID, int orderID) throws SQLException {
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=? AND driverID>0";
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerID);
+            ps.setInt(2, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
+            }
+        }
+        return null;
+    }
+
+    /** Save or update driver-specific feedback. */
+    public void saveOrUpdateDriverFeedback(int customerID, int driverID,
+            int orderID, int rating, String comment) throws SQLException {
+        int orderItemID = getFirstOrderItemID(orderID);
+        if (orderItemID == -1) throw new SQLException("No order items for orderID: " + orderID);
+        try (Connection conn = getConn()) {
+            String upd = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
+                    + "WHERE customerID=? AND driverID=? AND orderItemID=?";
+            try (PreparedStatement ps = conn.prepareStatement(upd)) {
+                ps.setInt(1, rating); ps.setString(2, comment);
+                ps.setString(3, java.time.LocalDateTime.now().toString());
+                ps.setInt(4, customerID); ps.setInt(5, driverID); ps.setInt(6, orderItemID);
+                if (ps.executeUpdate() > 0) return;
+            }
+            String ins = "INSERT INTO feedbacks "
+                    + "(customerID, restaurantID, orderItemID, driverID, rating, comment, createdAt) "
+                    + "VALUES (?, 0, ?, ?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(ins)) {
+                ps.setInt(1, customerID); ps.setInt(2, orderItemID); ps.setInt(3, driverID);
+                ps.setInt(4, rating); ps.setString(5, comment);
+                ps.setString(6, java.time.LocalDateTime.now().toString());
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    /** All driver-specific feedback received by a driver (driverID > 0). */
+    public List<FeedbackEntry> getDriverFeedbackByDriver(int driverID) throws SQLException {
+        List<FeedbackEntry> list = new ArrayList<>();
+        String sql = "SELECT f.*, u.fullName AS customerName "
+                + "FROM feedbacks f "
+                + "JOIN users u ON f.customerID = u.userID "
+                + "WHERE f.driverID = ? ORDER BY f.createdAt DESC";
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, driverID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    FeedbackEntry e = map(rs);
+                    e.setCustomerName(rs.getString("customerName"));
+                    list.add(e);
+                }
+            }
+        }
+        return list;
     }
 }

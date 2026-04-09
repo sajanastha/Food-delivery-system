@@ -131,6 +131,11 @@ public class DatabaseManager {
                 + "FOREIGN KEY (restaurantID) REFERENCES restaurants(restaurantID)"
                 + ") ENGINE=InnoDB");
 
+            // Add driverID column to feedbacks if it doesn't exist yet
+            try {
+                s.execute("ALTER TABLE feedbacks ADD COLUMN driverID INT DEFAULT 0");
+            } catch (SQLException ignored) { /* column already exists */ }
+
             System.out.println("All tables ready.");
         } catch (SQLException e) {
             System.err.println("Tables error: " + e.getMessage());

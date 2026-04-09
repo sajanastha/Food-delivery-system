@@ -9,6 +9,7 @@ public class FeedbackEntry {
     private String comment;
     private String createdAt;
     private String customerName; // populated by JOIN queries in FeedbackDAO
+    private int driverID;           // 0 = restaurant feedback, >0 = driver feedback
 
     public int getFeedbackID() {
         return feedbackID;
@@ -73,4 +74,7 @@ public class FeedbackEntry {
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
     }
+
+    public int getDriverID() { return driverID; }
+    public void setDriverID(int driverID) { this.driverID = driverID; }
 }
