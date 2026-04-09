@@ -87,6 +87,12 @@ public class FeedbackDAO {
     /** Insert or update feedback for a given order. */
     public void saveOrUpdate(int customerID, int restaurantID,
             int orderID, int rating, String comment) throws SQLException {
+        // Get the first orderItemID from this order
+        int orderItemID = getFirstOrderItemID(orderID);
+        if (orderItemID == -1) {
+            throw new SQLException("No order items found for order ID: " + orderID);
+        }
+        
         try (Connection conn = getConn()) {
             // Try UPDATE first
             String updateSql = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
@@ -97,7 +103,7 @@ public class FeedbackDAO {
                 ps.setString(3, LocalDateTime.now().toString());
                 ps.setInt(4, customerID);
                 ps.setInt(5, restaurantID);
-                ps.setInt(6, orderID);
+                ps.setInt(6, orderItemID);
                 if (ps.executeUpdate() > 0) return; // updated existing
             }
             // No existing row — INSERT
@@ -107,13 +113,28 @@ public class FeedbackDAO {
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 ps.setInt(1, customerID);
                 ps.setInt(2, restaurantID);
-                ps.setInt(3, orderID);
+                ps.setInt(3, orderItemID);
                 ps.setInt(4, rating);
                 ps.setString(5, comment);
                 ps.setString(6, LocalDateTime.now().toString());
                 ps.executeUpdate();
             }
         }
+    }
+
+    /** Helper: Get the first orderItemID for a given orderID. */
+    private int getFirstOrderItemID(int orderID) throws SQLException {
+        String sql = "SELECT orderItemID FROM order_items WHERE orderID = ? LIMIT 1";
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("orderItemID");
+                }
+            }
+        }
+        return -1; // No items found
     }
 
     private FeedbackEntry map(ResultSet rs) throws SQLException {
