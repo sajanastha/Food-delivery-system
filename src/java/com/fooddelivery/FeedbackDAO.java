@@ -15,11 +15,13 @@ public class FeedbackDAO {
 
     /** Get feedback for a specific customer + order. */
     public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
+        int orderItemID = getFirstOrderItemID(orderID);
+        if (orderItemID == -1) return null;
         String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
-            ps.setInt(2, orderID);
+            ps.setInt(2, orderItemID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
@@ -153,11 +155,13 @@ public class FeedbackDAO {
     /** Get driver-specific feedback for a customer+order (driverID > 0). */
     public FeedbackEntry getDriverFeedbackByCustomerAndOrder(
             int customerID, int orderID) throws SQLException {
+        int orderItemID = getFirstOrderItemID(orderID);
+        if (orderItemID == -1) return null;
         String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=? AND driverID>0";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
-            ps.setInt(2, orderID);
+            ps.setInt(2, orderItemID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }

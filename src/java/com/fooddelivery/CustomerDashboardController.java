@@ -124,6 +124,9 @@ public class CustomerDashboardController {
     private Restaurant selectedRest;
     private Order selectedHistoryOrder;
     private Customer me;
+    
+    // Feedback filtering
+    private Integer filteredFeedbackId = null; // When set, show only this feedback
 
     @FXML
     public void initialize() {
@@ -135,6 +138,14 @@ public class CustomerDashboardController {
         loadProfile();
         updateCartCount();
         showHomeTab(null);
+        
+        // Register button handlers programmatically (fallback for FXML handlers)
+        if (restaurantFeedbackBtn != null) {
+            restaurantFeedbackBtn.setOnAction(this::handleRestaurantFeedback);
+        }
+        if (driverFeedbackBtn != null) {
+            driverFeedbackBtn.setOnAction(this::handleDriverFeedback);
+        }
     }
 
     @FXML
@@ -213,6 +224,7 @@ public class CustomerDashboardController {
         profilePanel.setManaged(false);
         myFeedbackPanel.setVisible(true);
         myFeedbackPanel.setManaged(true);
+        filteredFeedbackId = null; // Clear filter when viewing all feedback
         loadMyFeedback();
     }
 
@@ -223,10 +235,24 @@ public class CustomerDashboardController {
 
         try {
             List<FeedbackEntry> entries = feedbackDAO.getByCustomer(me.getUserID());
+            
+            // Apply filter if set
+            if (filteredFeedbackId != null) {
+                entries = entries.stream()
+                    .filter(e -> e.getFeedbackID() == filteredFeedbackId)
+                    .toList();
+                feedbackCountLabel.setText("Showing 1 feedback");
+                myFeedbackStatus.setText("Click 'Feedback' tab to see all");
+            } else {
+                feedbackCountLabel.setText(entries.size() + " feedback(s)");
+                myFeedbackStatus.setText("");
+            }
+            
             if (entries.isEmpty()) {
                 myFeedbackListView.setItems(FXCollections.observableArrayList());
-                feedbackCountLabel.setText("0 feedback(s)");
-                myFeedbackStatus.setText("You haven't submitted any feedback yet.");
+                if (filteredFeedbackId == null) {
+                    myFeedbackStatus.setText("You haven't submitted any feedback yet.");
+                }
                 return;
             }
             // Enrich each entry: reuse customerName field to carry restaurant name
@@ -235,8 +261,6 @@ public class CustomerDashboardController {
                 e.setCustomerName(restName.isBlank() ? "Restaurant #" + e.getRestaurantID() : restName);
             }
             myFeedbackListView.setItems(FXCollections.observableArrayList(entries));
-            feedbackCountLabel.setText(entries.size() + " feedback(s)");
-            myFeedbackStatus.setText("");
         } catch (SQLException ex) {
             myFeedbackListView.setItems(FXCollections.observableArrayList());
             myFeedbackStatus.setText("Error loading feedback: " + ex.getMessage());
@@ -999,8 +1023,10 @@ public class CustomerDashboardController {
     }
 
     @FXML
-    private void handleDriverFeedback(ActionEvent event) {
-        if (selectedHistoryOrder == null) return;
+    private void handleDriverFeedback(ActionEvent event) {if (selectedHistoryOrder == null) {
+            showAlert("Error", "Please select an order first.");
+            return;
+        }
         try {
             FeedbackEntry existing = feedbackDAO.getDriverFeedbackByCustomerAndOrder(
                     me.getUserID(), selectedHistoryOrder.getOrderID());
@@ -1008,7 +1034,11 @@ public class CustomerDashboardController {
                 openViewFeedbackPrompt(existing, true);
                 return;
             }
-        } catch (SQLException ignored) {}
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Error", "Database error: " + e.getMessage());
+            return;
+        }
         openFeedbackPopup(selectedHistoryOrder, true);
     }
 
@@ -1047,10 +1077,9 @@ public class CustomerDashboardController {
             "-fx-padding: 9 18; -fx-cursor: hand;");
         viewInTabBtn.setOnAction(ev -> {
             popup.close();
-            // Navigate to Feedback tab and filter to just this entry
+            // Navigate to Feedback tab and filter to just this feedback
+            filteredFeedbackId = entry.getFeedbackID();
             showFeedbackTab(null);
-            // Re-load but filtered to show only this feedback
-            filterMyFeedbackToOrder(selectedHistoryOrder.getOrderID(), isDriver);
         });
 
         Button closeBtn = new Button("Close");
