@@ -79,7 +79,7 @@
                         <!-- Popular Near You section -->
                         <VBox spacing="10">
                             <HBox alignment="CENTER_LEFT">
-                                <Label text="🔥  Restaurant Near You"
+                                <Label text="🔥  Top Popular Restaurant"
                                        style="-fx-font-size: 15px;
                                               -fx-font-weight: bold;
                                               -fx-text-fill: #1E293B;"/>

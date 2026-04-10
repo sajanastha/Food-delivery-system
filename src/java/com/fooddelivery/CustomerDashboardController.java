@@ -213,6 +213,10 @@ public class CustomerDashboardController {
 
     @FXML
     public void showFeedbackTab(ActionEvent event) {
+        showFeedbackTab(true);
+    }
+
+    private void showFeedbackTab(boolean clearFilter) {
         setActiveTab(feedbackTabButton);
         homePanel.setVisible(false);
         homePanel.setManaged(false);
@@ -224,7 +228,9 @@ public class CustomerDashboardController {
         profilePanel.setManaged(false);
         myFeedbackPanel.setVisible(true);
         myFeedbackPanel.setManaged(true);
-        filteredFeedbackId = null; // Clear filter when viewing all feedback
+        if (clearFilter) {
+            filteredFeedbackId = null; // Clear filter when user navigates directly to Feedback tab
+        }
         loadMyFeedback();
     }
 
@@ -923,7 +929,7 @@ public class CustomerDashboardController {
                 FeedbackEntry existing = feedbackDAO.getByCustomerAndOrder(
                         me.getUserID(), order.getOrderID());
                 if (existing != null) {
-                    restaurantFeedbackBtn.setText("View Feedback");
+                    restaurantFeedbackBtn.setText("Show Feedback");
                     restaurantFeedbackBtn.setStyle(restaurantFeedbackBtn.getStyle()
                         .replace("-fx-background-color: #4d9078;",
                                  "-fx-background-color: #2e6b55;"));
@@ -973,7 +979,7 @@ public class CustomerDashboardController {
                     FeedbackEntry df = feedbackDAO.getDriverFeedbackByCustomerAndOrder(
                             me.getUserID(), order.getOrderID());
                     if (df != null) {
-                        driverFeedbackBtn.setText("View Feedback");
+                        driverFeedbackBtn.setText("Show Feedback");
                         driverFeedbackBtn.setStyle(
                             "-fx-background-color: #c05a00;" +
                             "-fx-text-fill: white;" +
@@ -1079,7 +1085,7 @@ public class CustomerDashboardController {
             popup.close();
             // Navigate to Feedback tab and filter to just this feedback
             filteredFeedbackId = entry.getFeedbackID();
-            showFeedbackTab(null);
+            showFeedbackTab(false);
         });
 
         Button closeBtn = new Button("Close");
