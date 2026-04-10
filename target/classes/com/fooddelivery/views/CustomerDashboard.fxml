@@ -535,6 +535,17 @@
                                   -fx-background-color: #fff0e0;
                                   -fx-background-radius: 20;
                                   -fx-padding: 4 12;"/>
+                    <Button text="Show All Reviews"
+                            onAction="#showFeedbackTab"
+                            fx:id="showAllFeedbackBtn"
+                            visible="false"
+                            managed="false"
+                            style="-fx-background-color: #e8e8c8;
+                                   -fx-text-fill: #555;
+                                   -fx-background-radius: 8;
+                                   -fx-font-size: 12px;
+                                   -fx-padding: 6 14;
+                                   -fx-cursor: hand;"/>
                 </HBox>
 
                 <!-- Feedback list -->

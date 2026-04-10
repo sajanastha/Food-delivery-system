@@ -13,9 +13,23 @@ public class FeedbackDAO {
         return DatabaseManager.getInstance().newConnection();
     }
 
-    /** Get feedback for a specific customer + order. */
+    /** Get feedback for a specific customer + order. This returns any feedback record, including driver-specific comments. */
     public FeedbackEntry getByCustomerAndOrder(int customerID, int orderID) throws SQLException {
         String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=?";
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerID);
+            ps.setInt(2, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
+            }
+        }
+        return null;
+    }
+
+    /** Get restaurant-specific feedback for a customer + order. */
+    public FeedbackEntry getRestaurantFeedbackByCustomerAndOrder(int customerID, int orderID) throws SQLException {
+        String sql = "SELECT * FROM feedbacks WHERE customerID=? AND orderItemID=? AND driverID=0";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerID);
@@ -162,25 +176,25 @@ public class FeedbackDAO {
     }
 
     /** Save or update driver-specific feedback. */
-    public void saveOrUpdateDriverFeedback(int customerID, int driverID,
+    public void saveOrUpdateDriverFeedback(int customerID, int restaurantID, int driverID,
             int orderID, int rating, String comment) throws SQLException {
         int orderItemID = orderID; // feedbacks.orderItemID stores the orderID
         try (Connection conn = getConn()) {
             String upd = "UPDATE feedbacks SET rating=?, comment=?, createdAt=? "
-                    + "WHERE customerID=? AND driverID=? AND orderItemID=?";
+                    + "WHERE customerID=? AND restaurantID=? AND driverID=? AND orderItemID=?";
             try (PreparedStatement ps = conn.prepareStatement(upd)) {
                 ps.setInt(1, rating); ps.setString(2, comment);
                 ps.setString(3, java.time.LocalDateTime.now().toString());
-                ps.setInt(4, customerID); ps.setInt(5, driverID); ps.setInt(6, orderItemID);
+                ps.setInt(4, customerID); ps.setInt(5, restaurantID); ps.setInt(6, driverID); ps.setInt(7, orderItemID);
                 if (ps.executeUpdate() > 0) return;
             }
             String ins = "INSERT INTO feedbacks "
                     + "(customerID, restaurantID, orderItemID, driverID, rating, comment, createdAt) "
-                    + "VALUES (?, 0, ?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(ins)) {
-                ps.setInt(1, customerID); ps.setInt(2, orderItemID); ps.setInt(3, driverID);
-                ps.setInt(4, rating); ps.setString(5, comment);
-                ps.setString(6, java.time.LocalDateTime.now().toString());
+                ps.setInt(1, customerID); ps.setInt(2, restaurantID); ps.setInt(3, orderItemID); ps.setInt(4, driverID);
+                ps.setInt(5, rating); ps.setString(6, comment);
+                ps.setString(7, java.time.LocalDateTime.now().toString());
                 ps.executeUpdate();
             }
         }

@@ -109,6 +109,7 @@ public class CustomerDashboardController {
     @FXML private ListView<FeedbackEntry> myFeedbackListView;
     @FXML private Label feedbackCountLabel;
     @FXML private Label myFeedbackStatus;
+    @FXML private Button showAllFeedbackBtn;
 
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
     private final MenuItemDAO menuItemDAO = new MenuItemDAO();
@@ -247,11 +248,21 @@ public class CustomerDashboardController {
                 entries = entries.stream()
                     .filter(e -> e.getFeedbackID() == filteredFeedbackId)
                     .toList();
-                feedbackCountLabel.setText("Showing 1 feedback");
-                myFeedbackStatus.setText("Click 'Feedback' tab to see all");
+                feedbackCountLabel.setText("Showing 1 review");
+                myFeedbackStatus.setText("Filtered view");
+                // Show the "Show All" button
+                if (showAllFeedbackBtn != null) {
+                    showAllFeedbackBtn.setVisible(true);
+                    showAllFeedbackBtn.setManaged(true);
+                }
             } else {
                 feedbackCountLabel.setText(entries.size() + " feedback(s)");
                 myFeedbackStatus.setText("");
+                // Hide the "Show All" button when not filtering
+                if (showAllFeedbackBtn != null) {
+                    showAllFeedbackBtn.setVisible(false);
+                    showAllFeedbackBtn.setManaged(false);
+                }
             }
             
             if (entries.isEmpty()) {
@@ -920,34 +931,30 @@ public class CustomerDashboardController {
 
         // Restaurant row
         detailRestaurantLabel.setText(getRestaurantName(order.getRestaurantID()));
-        boolean delivered = order.getStatus() == OrderStatus.DELIVERED;
-        restaurantFeedbackBtn.setDisable(!delivered);
+        boolean cancelled = order.getStatus() == OrderStatus.CANCELLED;
+        restaurantFeedbackBtn.setDisable(cancelled);
 
         // Check if restaurant feedback already exists
-        if (delivered) {
-            try {
-                FeedbackEntry existing = feedbackDAO.getByCustomerAndOrder(
-                        me.getUserID(), order.getOrderID());
-                if (existing != null) {
-                    restaurantFeedbackBtn.setText("Show Feedback");
-                    restaurantFeedbackBtn.setStyle(restaurantFeedbackBtn.getStyle()
-                        .replace("-fx-background-color: #4d9078;",
-                                 "-fx-background-color: #2e6b55;"));
-                } else {
-                    restaurantFeedbackBtn.setText("Add Feedback");
-                    restaurantFeedbackBtn.setStyle(
-                        "-fx-background-color: #4d9078;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-font-size: 11px;" +
-                        "-fx-padding: 6 12;" +
-                        "-fx-cursor: hand;");
-                }
-            } catch (SQLException ignored) {
+        try {
+            FeedbackEntry existing = feedbackDAO.getRestaurantFeedbackByCustomerAndOrder(
+                    me.getUserID(), order.getOrderID());
+            if (existing != null) {
+                restaurantFeedbackBtn.setText("Show Feedback");
+                restaurantFeedbackBtn.setStyle(restaurantFeedbackBtn.getStyle()
+                    .replace("-fx-background-color: #4d9078;",
+                             "-fx-background-color: #2e6b55;"));
+            } else {
                 restaurantFeedbackBtn.setText("Add Feedback");
+                restaurantFeedbackBtn.setStyle(
+                    "-fx-background-color: #4d9078;" +
+                    "-fx-text-fill: white;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-background-radius: 8;" +
+                    "-fx-font-size: 11px;" +
+                    "-fx-padding: 6 12;" +
+                    "-fx-cursor: hand;");
             }
-        } else {
+        } catch (SQLException ignored) {
             restaurantFeedbackBtn.setText("Add Feedback");
         }
 
@@ -973,37 +980,33 @@ public class CustomerDashboardController {
                 detailDriverLabel.setText("Driver #" + driverID);
             }
             // Driver feedback button state
-            if (delivered) {
-                driverFeedbackBtn.setDisable(false);
-                try {
-                    FeedbackEntry df = feedbackDAO.getDriverFeedbackByCustomerAndOrder(
-                            me.getUserID(), order.getOrderID());
-                    if (df != null) {
-                        driverFeedbackBtn.setText("Show Feedback");
-                        driverFeedbackBtn.setStyle(
-                            "-fx-background-color: #c05a00;" +
-                            "-fx-text-fill: white;" +
-                            "-fx-font-weight: bold;" +
-                            "-fx-background-radius: 8;" +
-                            "-fx-font-size: 11px;" +
-                            "-fx-padding: 6 12;" +
-                            "-fx-cursor: hand;");
-                    } else {
-                        driverFeedbackBtn.setText("Add Feedback");
-                        driverFeedbackBtn.setStyle(
-                            "-fx-background-color: #FF7518;" +
-                            "-fx-text-fill: white;" +
-                            "-fx-font-weight: bold;" +
-                            "-fx-background-radius: 8;" +
-                            "-fx-font-size: 11px;" +
-                            "-fx-padding: 6 12;" +
-                            "-fx-cursor: hand;");
-                    }
-                } catch (SQLException ignored) {
+            boolean driverFeedbackAllowed = !cancelled;
+            driverFeedbackBtn.setDisable(!driverFeedbackAllowed);
+            try {
+                FeedbackEntry df = feedbackDAO.getDriverFeedbackByCustomerAndOrder(
+                        me.getUserID(), order.getOrderID());
+                if (df != null) {
+                    driverFeedbackBtn.setText("Show Feedback");
+                    driverFeedbackBtn.setStyle(
+                        "-fx-background-color: #c05a00;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-font-size: 11px;" +
+                        "-fx-padding: 6 12;" +
+                        "-fx-cursor: hand;");
+                } else {
                     driverFeedbackBtn.setText("Add Feedback");
+                    driverFeedbackBtn.setStyle(
+                        "-fx-background-color: #FF7518;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-font-size: 11px;" +
+                        "-fx-padding: 6 12;" +
+                        "-fx-cursor: hand;");
                 }
-            } else {
-                driverFeedbackBtn.setDisable(true);
+            } catch (SQLException ignored) {
                 driverFeedbackBtn.setText("Add Feedback");
             }
         } else {
@@ -1015,13 +1018,16 @@ public class CustomerDashboardController {
     @FXML
     private void handleRestaurantFeedback(ActionEvent event) {
         if (selectedHistoryOrder == null) return;
-        // Check if already given — if so, open in view mode, then offer "View in Feedback tab"
         try {
-            FeedbackEntry existing = feedbackDAO.getByCustomerAndOrder(
-                    me.getUserID(), selectedHistoryOrder.getOrderID());
+            FeedbackEntry existing =
+                feedbackDAO.getRestaurantFeedbackByCustomerAndOrder(
+                    me.getUserID(),
+                    selectedHistoryOrder.getOrderID());
             if (existing != null) {
-                // Already submitted — show "View Your Feedback" popup
-                openViewFeedbackPrompt(existing, false);
+                // Already submitted — jump straight to Feedback tab
+                // filtered to show only this review
+                filteredFeedbackId = existing.getFeedbackID();
+                showFeedbackTab(false);
                 return;
             }
         } catch (SQLException ignored) {}
@@ -1029,15 +1035,21 @@ public class CustomerDashboardController {
     }
 
     @FXML
-    private void handleDriverFeedback(ActionEvent event) {if (selectedHistoryOrder == null) {
+    private void handleDriverFeedback(ActionEvent event) {
+        if (selectedHistoryOrder == null) {
             showAlert("Error", "Please select an order first.");
             return;
         }
         try {
-            FeedbackEntry existing = feedbackDAO.getDriverFeedbackByCustomerAndOrder(
-                    me.getUserID(), selectedHistoryOrder.getOrderID());
+            FeedbackEntry existing =
+                feedbackDAO.getDriverFeedbackByCustomerAndOrder(
+                    me.getUserID(),
+                    selectedHistoryOrder.getOrderID());
             if (existing != null) {
-                openViewFeedbackPrompt(existing, true);
+                // Already submitted — jump straight to Feedback tab
+                // filtered to show only this review
+                filteredFeedbackId = existing.getFeedbackID();
+                showFeedbackTab(false);
                 return;
             }
         } catch (SQLException e) {
@@ -1223,7 +1235,7 @@ public class CustomerDashboardController {
         try {
             FeedbackEntry existing = isDriver
                     ? feedbackDAO.getDriverFeedbackByCustomerAndOrder(me.getUserID(), order.getOrderID())
-                    : feedbackDAO.getByCustomerAndOrder(me.getUserID(), order.getOrderID());
+                    : feedbackDAO.getRestaurantFeedbackByCustomerAndOrder(me.getUserID(), order.getOrderID());
             if (existing != null) {
                 commentArea.setText(existing.getComment());
                 selectedRating[0] = existing.getRating();
@@ -1265,6 +1277,7 @@ public class CustomerDashboardController {
                 if (isDriver) {
                     feedbackDAO.saveOrUpdateDriverFeedback(
                         me.getUserID(),
+                        order.getRestaurantID(),
                         order.getDriverID(),
                         order.getOrderID(),
                         selectedRating[0],
