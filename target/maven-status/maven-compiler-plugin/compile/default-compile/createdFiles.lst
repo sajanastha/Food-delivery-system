@@ -2,11 +2,13 @@ com\fooddelivery\DatabaseConnection.class
 com\fooddelivery\DatabaseManager.class
 com\fooddelivery\RegisterCustomerController.class
 com\fooddelivery\RegisterDriverController.class
+com\fooddelivery\FeedbackCardCell.class
 com\fooddelivery\SessionManager.class
 com\fooddelivery\PricingService.class
 com\fooddelivery\CustomerDashboardController.class
 com\fooddelivery\Driver.class
 com\fooddelivery\MenuItem.class
+com\fooddelivery\FeedbackCardCell$Mode.class
 com\fooddelivery\OrderStatus.class
 com\fooddelivery\MenuItemDAO.class
 com\fooddelivery\ReportService.class

@@ -1120,11 +1120,19 @@ public class CustomerDashboardController {
         myFeedbackListView.setCellFactory(
                 lv -> new FeedbackCardCell(FeedbackCardCell.Mode.CUSTOMER));
         try {
+            int orderItemID = feedbackDAO.getFirstOrderItemIDFromOrder(orderID);
+            if (orderItemID <= 0) {
+                myFeedbackListView.setItems(FXCollections.observableArrayList());
+                myFeedbackStatus.setText("Could not load feedback for this order.");
+                feedbackCountLabel.setText("0 shown");
+                return;
+            }
+
             List<FeedbackEntry> all = feedbackDAO.getByCustomer(me.getUserID());
             List<FeedbackEntry> filtered = new ArrayList<>();
             for (FeedbackEntry e : all) {
                 boolean isDriverEntry = (e.getDriverID() > 0);
-                if (e.getOrderItemID() == orderID && isDriverEntry == driverFeedback) {
+                if (e.getOrderItemID() == orderItemID && isDriverEntry == driverFeedback) {
                     String name = driverFeedback
                             ? "Driver feedback"
                             : getRestaurantName(e.getRestaurantID());

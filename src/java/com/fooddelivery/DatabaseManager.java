@@ -136,6 +136,31 @@ public class DatabaseManager {
                 s.execute("ALTER TABLE feedbacks ADD COLUMN driverID INT DEFAULT 0");
             } catch (SQLException ignored) { /* column already exists */ }
 
+            // ── Remove the restaurantID FK constraint from feedbacks ──────────
+            // This constraint breaks driver feedback (no valid restaurantID needed)
+            // and breaks restaurant feedback when restaurantID = 0 or mismatched.
+            // We do this safely: find the constraint name from INFORMATION_SCHEMA first.
+            try {
+                ResultSet fkRs = s.executeQuery(
+                    "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
+                    + "WHERE TABLE_SCHEMA = DATABASE() "
+                    + "AND TABLE_NAME = 'feedbacks' "
+                    + "AND COLUMN_NAME = 'restaurantID' "
+                    + "AND REFERENCED_TABLE_NAME = 'restaurants'");
+                while (fkRs.next()) {
+                    String constraintName = fkRs.getString("CONSTRAINT_NAME");
+                    try {
+                        s.execute("ALTER TABLE feedbacks DROP FOREIGN KEY `" + constraintName + "`");
+                        System.out.println("Dropped feedbacks FK: " + constraintName);
+                    } catch (SQLException ignored2) { /* already dropped */ }
+                }
+            } catch (SQLException ignored) { /* INFORMATION_SCHEMA not accessible */ }
+
+            // Make restaurantID nullable so driver-only feedback rows work (restaurantID = 0)
+            try {
+                s.execute("ALTER TABLE feedbacks MODIFY COLUMN restaurantID INT DEFAULT 0");
+            } catch (SQLException ignored) { /* already nullable or column changed */ }
+
             System.out.println("All tables ready.");
         } catch (SQLException e) {
             System.err.println("Tables error: " + e.getMessage());
