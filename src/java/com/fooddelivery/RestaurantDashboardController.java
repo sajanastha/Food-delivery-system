@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -17,6 +18,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class RestaurantDashboardController {
 
@@ -73,7 +75,7 @@ public class RestaurantDashboardController {
     @FXML private VBox reportsPanel;
     @FXML private VBox feedbackPanel;
     @FXML private VBox profilePanel;
-    @FXML private Label profileNameLabel;
+    @FXML private TextField profileNameField;
     @FXML private Label profileEmailLabel;
     @FXML private Label profilePhoneLabel;
     @FXML private Label profileRoleLabel;
@@ -83,6 +85,7 @@ public class RestaurantDashboardController {
     private final RestaurantDAO restaurantDAO = new RestaurantDAO();
     private final ReportService reportService = new ReportService();
     private final FeedbackDAO   feedbackDAO   = new FeedbackDAO();
+    private final UserDAO       userDAO       = new UserDAO();
 
     private Restaurant      myRestaurant;
     private List<MenuItem>  menuItems     = new ArrayList<>();
@@ -112,11 +115,83 @@ public class RestaurantDashboardController {
     }
 
     private void setProfileInfo(Restaurant owner) {
-        profileNameLabel.setText("Name: " + owner.getFullName());
+        profileNameField.setText(owner.getFullName());
         profileEmailLabel.setText("Email: " + owner.getEmail());
         profilePhoneLabel.setText("Phone: " + (owner.getPhone() == null || owner.getPhone().isBlank()
                 ? "Not provided" : owner.getPhone()));
         profileRoleLabel.setText("Role: Restaurant Owner");
+    }
+
+    @FXML
+    private void handleSaveProfile(ActionEvent event) {
+        String newName = profileNameField.getText().trim();
+        if (newName.isBlank()) {
+            showAlert("Error", "Name cannot be empty.");
+            return;
+        }
+        Restaurant owner = (Restaurant) SessionManager.getInstance().getCurrentUser();
+        if (newName.equals(owner.getFullName())) {
+            showAlert("Info", "No changes to save.");
+            return;
+        }
+        owner.setFullName(newName);
+        userDAO.updateUser(owner);
+        profileNameField.setText(owner.getFullName());
+        showAlert("Saved", "Your name has been updated.");
+    }
+
+    @FXML
+    private void handleChangePassword(ActionEvent event) {
+        PasswordField currentPassword = new PasswordField();
+        currentPassword.setPromptText("Current password");
+        Dialog<String> verifyDialog = new Dialog<>();
+        verifyDialog.setTitle("Verify Current Password");
+        verifyDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        verifyDialog.getDialogPane().setContent(currentPassword);
+        verifyDialog.setResultConverter(button -> button == ButtonType.OK ? currentPassword.getText() : null);
+        Optional<String> currentResult = verifyDialog.showAndWait();
+        if (currentResult.isEmpty() || currentResult.get().isBlank()) {
+            return;
+        }
+        Restaurant owner = (Restaurant) SessionManager.getInstance().getCurrentUser();
+        if (!currentResult.get().equals(owner.getPassword())) {
+            showAlert("Error", "Current password is incorrect.");
+            return;
+        }
+
+        PasswordField newPassword = new PasswordField();
+        PasswordField confirmPassword = new PasswordField();
+        newPassword.setPromptText("New password");
+        confirmPassword.setPromptText("Confirm new password");
+        GridPane passwordGrid = new GridPane();
+        passwordGrid.setHgap(10);
+        passwordGrid.setVgap(10);
+        passwordGrid.add(new Label("New password:"), 0, 0);
+        passwordGrid.add(newPassword, 1, 0);
+        passwordGrid.add(new Label("Confirm password:"), 0, 1);
+        passwordGrid.add(confirmPassword, 1, 1);
+
+        Dialog<ButtonType> changeDialog = new Dialog<>();
+        changeDialog.setTitle("Change Password");
+        changeDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        changeDialog.getDialogPane().setContent(passwordGrid);
+        Optional<ButtonType> changeResult = changeDialog.showAndWait();
+        if (changeResult.isEmpty() || changeResult.get() != ButtonType.OK) {
+            return;
+        }
+        String newPass = newPassword.getText().trim();
+        String confirmPass = confirmPassword.getText().trim();
+        if (newPass.isEmpty()) {
+            showAlert("Error", "New password cannot be empty.");
+            return;
+        }
+        if (!newPass.equals(confirmPass)) {
+            showAlert("Error", "Passwords do not match.");
+            return;
+        }
+        owner.setPassword(newPass);
+        userDAO.updateUser(owner);
+        showAlert("Saved", "Password updated successfully.");
     }
 
     // ── Panel switching ───────────────────────────────────────────
@@ -688,6 +763,14 @@ public class RestaurantDashboardController {
         // Fixed: was "Login.fxml" — actual file is "LogIn.fxml"
         loadScreen(e, "/com/fooddelivery/views/LogIn.fxml",
                 "Login");
+    }
+
+    private void showAlert(String title, String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 
     private void loadScreen(ActionEvent e,

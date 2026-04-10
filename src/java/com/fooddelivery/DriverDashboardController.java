@@ -9,10 +9,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.collections.ObservableList;
 import javafx.stage.Stage;
@@ -21,6 +26,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class DriverDashboardController {
@@ -48,12 +54,15 @@ public class DriverDashboardController {
     @FXML private TextArea         historyDetailArea;
     @FXML private Label            historyStatus;
 
+    @FXML private TextField profileNameField;
     @FXML private TextArea profileArea;
     @FXML private Button requestsNavButton;
     @FXML private Button activeNavButton;
     @FXML private Button historyNavButton;
     @FXML private Button profileNavButton;
     @FXML private Button feedbackNavButton;
+
+    private final UserDAO userDAO = new UserDAO();
 
     // Panels for bottom nav switching
     @FXML private VBox requestsPanel;
@@ -323,9 +332,9 @@ public class DriverDashboardController {
     }
 
     private void loadProfile() {
+        profileNameField.setText(me.getFullName());
         profileArea.setText(
-            "Name:          " + me.getFullName() + "\n"
-            + "Email:         " + me.getEmail() + "\n"
+            "Email:         " + me.getEmail() + "\n"
             + "Phone:         "
             + (me.getPhone() == null || me.getPhone().isEmpty()
                 ? "Not provided" : me.getPhone()) + "\n"
@@ -333,6 +342,77 @@ public class DriverDashboardController {
             + "Vehicle:       " + me.getVehicleType() + "\n"
             + "Status:        "
             + (me.isAvailable() ? "Available" : "On Delivery"));
+    }
+
+    @FXML
+    private void handleSaveProfile(ActionEvent event) {
+        String newName = profileNameField.getText().trim();
+        if (newName.isBlank()) {
+            showAlert("Error", "Name cannot be empty.");
+            return;
+        }
+        if (newName.equals(me.getFullName())) {
+            showAlert("Info", "No changes to save.");
+            return;
+        }
+        me.setFullName(newName);
+        userDAO.updateUser(me);
+        welcomeLabel.setText("Driver: " + me.getFullName());
+        loadProfile();
+        showAlert("Saved", "Your name has been updated.");
+    }
+
+    @FXML
+    private void handleChangePassword(ActionEvent event) {
+        PasswordField currentPassword = new PasswordField();
+        currentPassword.setPromptText("Current password");
+        Dialog<String> verifyDialog = new Dialog<>();
+        verifyDialog.setTitle("Verify Current Password");
+        verifyDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        verifyDialog.getDialogPane().setContent(currentPassword);
+        verifyDialog.setResultConverter(button -> button == ButtonType.OK ? currentPassword.getText() : null);
+        Optional<String> currentResult = verifyDialog.showAndWait();
+        if (currentResult.isEmpty() || currentResult.get().isBlank()) {
+            return;
+        }
+        if (!currentResult.get().equals(me.getPassword())) {
+            showAlert("Error", "Current password is incorrect.");
+            return;
+        }
+
+        PasswordField newPassword = new PasswordField();
+        PasswordField confirmPassword = new PasswordField();
+        newPassword.setPromptText("New password");
+        confirmPassword.setPromptText("Confirm new password");
+        GridPane passwordGrid = new GridPane();
+        passwordGrid.setHgap(10);
+        passwordGrid.setVgap(10);
+        passwordGrid.add(new Label("New password:"), 0, 0);
+        passwordGrid.add(newPassword, 1, 0);
+        passwordGrid.add(new Label("Confirm password:"), 0, 1);
+        passwordGrid.add(confirmPassword, 1, 1);
+
+        Dialog<ButtonType> changeDialog = new Dialog<>();
+        changeDialog.setTitle("Change Password");
+        changeDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        changeDialog.getDialogPane().setContent(passwordGrid);
+        Optional<ButtonType> changeResult = changeDialog.showAndWait();
+        if (changeResult.isEmpty() || changeResult.get() != ButtonType.OK) {
+            return;
+        }
+        String newPass = newPassword.getText().trim();
+        String confirmPass = confirmPassword.getText().trim();
+        if (newPass.isEmpty()) {
+            showAlert("Error", "New password cannot be empty.");
+            return;
+        }
+        if (!newPass.equals(confirmPass)) {
+            showAlert("Error", "Passwords do not match.");
+            return;
+        }
+        me.setPassword(newPass);
+        userDAO.updateUser(me);
+        showAlert("Saved", "Password updated successfully.");
     }
 
     // ── Request actions ───────────────────────────────────────────────────────
