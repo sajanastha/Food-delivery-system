@@ -143,7 +143,7 @@ public class CustomerDashboardController {
     @FXML
     public void initialize() {
         me = (Customer) SessionManager.getInstance().getCurrentUser();
-        welcomeLabel.setText("Hello, " + me.getFullName());
+        welcomeLabel.setText("Start your order with QuickBite");
         loadRestaurants();
         loadHomeInsights();
         loadHistory();
@@ -1387,7 +1387,7 @@ public class CustomerDashboardController {
         }
         me.setFullName(newName);
         userDAO.updateUser(me);
-        welcomeLabel.setText("Hello, " + me.getFullName());
+        welcomeLabel.setText("Start your order with QuickBite");
         showAlert("Saved", "Your name has been updated.");
     }
 
