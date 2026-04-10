@@ -244,10 +244,20 @@ public class CustomerDashboardController {
             List<FeedbackEntry> entries = feedbackDAO.getByCustomer(me.getUserID());
             
             // Apply filter if set
+            boolean isFiltered = false;
             if (filteredFeedbackId != null) {
-                entries = entries.stream()
+                List<FeedbackEntry> filtered = entries.stream()
                     .filter(e -> e.getFeedbackID() == filteredFeedbackId)
                     .toList();
+                if (!filtered.isEmpty()) {
+                    entries = filtered;
+                    isFiltered = true;
+                } else {
+                    filteredFeedbackId = null; // clear stale filter
+                }
+            }
+
+            if (isFiltered) {
                 feedbackCountLabel.setText("Showing 1 review");
                 myFeedbackStatus.setText("Filtered view");
                 // Show the "Show All" button
@@ -1300,6 +1310,7 @@ public class CustomerDashboardController {
                 }
                 popup.close();
                 populateOrderDetailCard(order); // refresh button states
+                filteredFeedbackId = null; // clear any previous per-review filter
                 loadMyFeedback();
                 showAlert("Feedback Saved",
                     "Your " + selectedRating[0] + "-star review"
