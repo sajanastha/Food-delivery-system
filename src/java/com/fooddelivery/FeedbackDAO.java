@@ -254,7 +254,7 @@ public class FeedbackDAO {
     }
 
     /** Helper: Get the FIRST orderItemID for a given orderID. */
-    private int getFirstOrderItemIDFromOrder(int orderID) throws SQLException {
+    public int getFirstOrderItemIDFromOrder(int orderID) throws SQLException {
         String sql = "SELECT orderItemID FROM order_items WHERE orderID = ? LIMIT 1";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
