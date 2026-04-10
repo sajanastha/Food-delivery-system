@@ -12,7 +12,7 @@
         <HBox alignment="CENTER_LEFT" spacing="16"
               style="-fx-background-color: #4d9078;
                      -fx-padding: 14 24;">
-            <Label text="🍽 Restaurant Portal"
+            <Label text="🍽 Restaurant Owner"
                    style="-fx-font-size: 20px;
                           -fx-font-weight: bold;
                           -fx-text-fill: white;"/>
